@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>Game Đập Chuột 🐭🔨</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial;
+        background: linear-gradient(135deg, #87ceeb, #f0f8ff);
+        overflow: hidden;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin: 8px;
+      }
+
+      .panel {
+        padding: 5px;
+      }
+
+      select,
+      input,
+      button {
+        padding: 8px;
+        font-size: 14px;
+        margin: 3px;
+        border-radius: 8px;
+        border: none;
+      }
+
+      button {
+        background: #ff6b6b;
+        color: white;
+      }
+
+      .info {
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        width: 100vw;
+        height: 75vh;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .hole {
+        background: #5a3e36;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .mole {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        bottom: -100%;
+        left: 0;
+        transition: 0.2s;
+        cursor: pointer;
+      }
+
+      .mole img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+      }
+
+      .up {
+        bottom: 10px;
+      }
+
+      /* 🪓 búa */
+      .hammer {
+        position: fixed;
+        font-size: 40px;
+        pointer-events: none;
+        display: none;
+        transform: rotate(-30deg);
+        z-index: 999;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>🐭🔨 ĐẬP CHUỘT</h1>
+
+    <div class="panel">
+      <select id="level">
+        <option value="1000">Dễ 🟢</option>
+        <option value="700">TB 🟡</option>
+        <option value="400">Khó 🔴</option>
+      </select>
+
+      <input id="timeInput" type="number" min="20" max="60" value="20" />
+
+      <button onclick="startGame()">Bắt đầu</button>
+      <button onclick="restartGame()">Chơi lại 🔄</button>
+
+      <div class="info">
+        Điểm: <span id="score">0</span> | Thời gian: <span id="time">0</span>s
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <!-- 🪓 búa -->
+    <div class="hammer" id="hammer">🔨</div>
+
+    <script>
+      const grid = document.getElementById("grid");
+      const scoreEl = document.getElementById("score");
+      const timeEl = document.getElementById("time");
+      const hammer = document.getElementById("hammer");
+
+      let score = 0;
+      let gameActive = false;
+      let holes = [];
+      let last = -1;
+      let speed = 700;
+      let timeLeft = 0;
+      let countdown;
+
+      // tạo 9 ô
+      for (let i = 0; i < 9; i++) {
+        const hole = document.createElement("div");
+        hole.classList.add("hole");
+
+        const mole = document.createElement("div");
+        mole.classList.add("mole");
+
+        mole.innerHTML = `<img src="../img/mole.jpg" />`;
+
+        hole.appendChild(mole);
+        grid.appendChild(hole);
+
+        holes.push(mole);
+
+        mole.addEventListener("click", (e) => {
+          if (!gameActive) return;
+
+          if (mole.classList.contains("up")) {
+            score++;
+            scoreEl.textContent = score;
+            mole.classList.remove("up");
+
+            // 🪓 hiệu ứng búa
+            hammer.style.left = e.clientX - 30 + "px";
+            hammer.style.top = e.clientY - 30 + "px";
+            hammer.style.display = "block";
+
+            setTimeout(() => {
+              hammer.style.display = "none";
+            }, 120);
+          }
+        });
+      }
+
+      function randomMole() {
+        let i = Math.floor(Math.random() * holes.length);
+        if (i === last) return randomMole();
+        last = i;
+        return holes[i];
+      }
+
+      function showMole() {
+        if (!gameActive) return;
+
+        const mole = randomMole();
+        mole.classList.add("up");
+
+        setTimeout(() => {
+          mole.classList.remove("up");
+          if (gameActive) showMole();
+        }, speed);
+      }
+
+      function startGame() {
+        reset();
+
+        timeLeft = parseInt(document.getElementById("timeInput").value);
+        if (timeLeft < 20) timeLeft = 20;
+        if (timeLeft > 60) timeLeft = 60;
+
+        speed = parseInt(document.getElementById("level").value);
+
+        gameActive = true;
+        timeEl.textContent = timeLeft;
+
+        showMole();
+
+        countdown = setInterval(() => {
+          timeLeft--;
+          timeEl.textContent = timeLeft;
+
+          if (timeLeft <= 0) endGame();
+        }, 1000);
+      }
+
+      function endGame() {
+        gameActive = false;
+        clearInterval(countdown);
+        alert("⏰ Hết giờ! Điểm: " + score);
+      }
+
+      function restartGame() {
+        clearInterval(countdown);
+        reset();
+        startGame();
+      }
+
+      function reset() {
+        score = 0;
+        scoreEl.textContent = score;
+        gameActive = false;
+        holes.forEach((m) => m.classList.remove("up"));
+      }
+    </script>
+  </body>
+</html>
