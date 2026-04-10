@@ -30,6 +30,7 @@
             margin: 10px 0;
             border-radius: 10px;
             transition: 0.2s;
+            border-left: 5px solid #0f0;
         }
 
         .card:hover {
@@ -43,14 +44,15 @@
 
         .answer {
             color: #0f0;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
 
-<h1>🌱 Danh sách cây</h1>
+<h1>🌱 Cây đã được chọn</h1>
 
-<input type="text" id="search" placeholder="Tìm cây...">
+<input type="text" id="search" placeholder="Tìm cây hoặc tên người...">
 
 <div id="data"></div>
 
@@ -59,19 +61,26 @@ const API = "https://opensheet.elk.sh/1gmiZDIF5BMktjFzySFqYsCZtjYUDf0z_Y1otHiwkm
 
 let allData = [];
 
+function getName(item) {
+    return item.Answer || item.undefined || "";
+}
+
 function render(data) {
     const container = document.getElementById("data");
     container.innerHTML = "";
 
     data.forEach(item => {
-        if (!item.Check) return;
+        const name = getName(item);
+
+        // chỉ hiển thị cây đã được tick
+        if (!item.Check || !name || name === "FALSE") return;
 
         const div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML = `
             <div class="name">${item.Check}</div>
-            <div class="answer">${item.Answer || ""}</div>
+            <div class="answer">👤 ${name}</div>
         `;
 
         container.appendChild(div);
@@ -90,9 +99,17 @@ function loadData() {
 document.getElementById("search").addEventListener("input", function() {
     const keyword = this.value.toLowerCase();
 
-    const filtered = allData.filter(item => 
-        item.Check && item.Check.toLowerCase().includes(keyword)
-    );
+    const filtered = allData.filter(item => {
+        const name = getName(item);
+        return (
+            item.Check && name &&
+            name !== "FALSE" &&
+            (
+                item.Check.toLowerCase().includes(keyword) ||
+                name.toLowerCase().includes(keyword)
+            )
+        );
+    });
 
     render(filtered);
 });
@@ -100,7 +117,7 @@ document.getElementById("search").addEventListener("input", function() {
 // load lần đầu
 loadData();
 
-// auto reload mỗi 10s
+// auto update mỗi 10s
 setInterval(loadData, 10000);
 </script>
 
