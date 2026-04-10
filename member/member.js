@@ -1,15 +1,25 @@
 const API =
   "https://opensheet.elk.sh/1xT9xqRBkRddx9uPv9gNE0WR0M8TcXw14-vtzGQlszrc/1";
 
+const API2 =
+  "https://opensheet.elk.sh/1xT9xqRBkRddx9uPv9gNE0WR0M8TcXw14-vtzGQlszrc/2";
+
 // ảnh duy nhất
 const IMAGE_PATH = "../img/member/chin.jpg";
+
+// lưu dữ liệu API2
+let perksData = [];
 
 async function loadMembers() {
   const container = document.getElementById("character-grid");
 
   try {
-    const res = await fetch(API);
-    const rows = await res.json();
+    // load song song 2 API
+    const [res1, res2] = await Promise.all([fetch(API), fetch(API2)]);
+
+    const rows = await res1.json();
+    perksData = await res2.json();
+
     if (!rows || rows.length === 0) return;
 
     const members = Object.keys(rows[0]).filter((key) => key !== "Hoa");
@@ -30,17 +40,22 @@ async function loadMembers() {
 
         div.classList.add("selected");
 
-        // 👉 SET DATA
+        // set info
         document.getElementById("big-portrait-img").src = IMAGE_PATH;
         document.getElementById("char-name").textContent = name.toUpperCase();
 
-        document.getElementById("perks-list").innerHTML = `
-          <li>Trở nên nhanh nhẹn khi ướt</li>
-          <li>One Big Ol' Masochist</li>
-          <li>Clinical Depression Also Included</li>
-        `;
+        // 👉 lấy perks từ API2 theo name
+        const perks = perksData
+          .map((row) => row[name])
+          .filter((v) => v && v.trim() !== "");
 
-        // 👉 GỌI POPUP (đã có trong HTML)
+        // render perks
+        document.getElementById("perks-list").innerHTML =
+          perks.length > 0
+            ? perks.map((p) => `<li>${p}</li>`).join("")
+            : `<li>Không có dữ liệu</li>`;
+
+        // mở popup
         showPopup();
       };
 

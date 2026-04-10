@@ -109,7 +109,9 @@
 
       <button onclick="startGame()">Bắt đầu</button>
       <button onclick="restartGame()">Chơi lại 🔄</button>
-
+      <a href="../index.html">
+        <button>Trang chủ</button>
+      </a>
       <div class="info">
         Điểm: <span id="score">0</span> | Thời gian: <span id="time">0</span>s
       </div>
@@ -142,7 +144,7 @@
         const mole = document.createElement("div");
         mole.classList.add("mole");
 
-        mole.innerHTML = `<img src="../img/mole.jpg" />`;
+        mole.innerHTML = `<img src="../img/member/chin.jpg" />`;
 
         hole.appendChild(mole);
         grid.appendChild(hole);
