@@ -30,11 +30,14 @@
             margin: 10px 0;
             border-radius: 10px;
             transition: 0.2s;
+        }
+
+        .card.true {
             border-left: 5px solid #0f0;
         }
 
-        .card:hover {
-            background: #333;
+        .card.false {
+            border-left: 5px solid red;
         }
 
         .name {
@@ -43,14 +46,21 @@
         }
 
         .answer {
-            color: #0f0;
             margin-top: 5px;
+        }
+
+        .true .answer {
+            color: #0f0;
+        }
+
+        .false .answer {
+            color: red;
         }
     </style>
 </head>
 <body>
 
-<h1>🌱 Cây đã được chọn</h1>
+<h1>🌱 Danh sách cây</h1>
 
 <input type="text" id="search" placeholder="Tìm cây hoặc tên người...">
 
@@ -70,17 +80,19 @@ function render(data) {
     container.innerHTML = "";
 
     data.forEach(item => {
-        const name = getName(item);
+        if (!item.Check) return;
 
-        // chỉ hiển thị cây đã được tick
-        if (!item.Check || !name || name === "FALSE") return;
+        const name = getName(item);
+        const hasUser = name && name !== "FALSE";
 
         const div = document.createElement("div");
-        div.className = "card";
+        div.className = "card " + (hasUser ? "true" : "false");
 
         div.innerHTML = `
             <div class="name">${item.Check}</div>
-            <div class="answer">👤 ${name}</div>
+            <div class="answer">
+                ${hasUser ? "👤 " + name : "❌ Chưa có người"}
+            </div>
         `;
 
         container.appendChild(div);
@@ -102,11 +114,10 @@ document.getElementById("search").addEventListener("input", function() {
     const filtered = allData.filter(item => {
         const name = getName(item);
         return (
-            item.Check && name &&
-            name !== "FALSE" &&
+            item.Check &&
             (
                 item.Check.toLowerCase().includes(keyword) ||
-                name.toLowerCase().includes(keyword)
+                (name && name.toLowerCase().includes(keyword))
             )
         );
     });
@@ -114,10 +125,7 @@ document.getElementById("search").addEventListener("input", function() {
     render(filtered);
 });
 
-// load lần đầu
 loadData();
-
-// auto update mỗi 10s
 setInterval(loadData, 10000);
 </script>
 
