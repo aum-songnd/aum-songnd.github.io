@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Landing Page</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <header>
+      <div class="logo">MyPage</div>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section id="home" class="hero">
+      <h1>Chào mừng 👋</h1>
+      <p>Landing page + ảnh swipe</p>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section">
+      <h2>Giới thiệu</h2>
+      <p>Trang học web + có slider ảnh.</p>
+    </section>
+
+    <!-- 🖼️ SWIPE IMAGE SECTION -->
+    <section id="gallery" class="section dark">
+      <h2>Thư viện ảnh</h2>
+
+      <div class="slider-wrapper">
+        <div class="slider" id="slider">
+          <img src="https://picsum.photos/id/1015/900/500" />
+          <img src="https://picsum.photos/id/1016/900/500" />
+          <img src="https://picsum.photos/id/1025/900/500" />
+          <img src="https://picsum.photos/id/1035/900/500" />
+        </div>
+      </div>
+
+      <div class="dots" id="dots"></div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section">
+      <h2>Liên hệ</h2>
+      <p>Email: example@gmail.com</p>
+    </section>
+
+    <footer>
+      <p>© 2026 My Landing Page</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
