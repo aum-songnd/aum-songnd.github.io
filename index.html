@@ -165,7 +165,7 @@ let hasLoaded = false;
 
 function getName(item) {
     return Object.keys(item)
-        .filter(key => item[key] === "TRUE" && key !== "XU HOA")
+        .filter(key => item[key] === "TRUE" && key !== "Hoa")
         .join(", ");
 }
 
@@ -181,7 +181,7 @@ function render(data) {
     const frag = document.createDocumentFragment();
 
     data.forEach(item => {
-        const tree = item["XU HOA"];
+        const tree = item["Hoa"];
         if (!tree) return;
 
         const name = getName(item);
@@ -236,7 +236,7 @@ document.getElementById("search").addEventListener("input", function () {
         }
 
         const filtered = allData.filter(item => {
-            const tree = (item["XU HOA"] || "").toLowerCase();
+            const tree = (item["Hoa"] || "").toLowerCase();
             const name = getName(item).toLowerCase();
             return tree.includes(keyword) || name.includes(keyword);
         });
