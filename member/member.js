@@ -53,4 +53,6 @@ async function loadMembers() {
   }
 }
 
-loadMembers();
+document.addEventListener("DOMContentLoaded", () => {
+  loadMembers();
+});
