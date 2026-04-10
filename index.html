@@ -1,10 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Trang của tôi</title>
+    <meta charset="UTF-8">
+    <title>Danh sách cây 🌱</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #111;
+            color: #fff;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+
+        .card {
+            background: #222;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            background: #333;
+        }
+
+        .name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .answer {
+            color: #0f0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello bro 😎</h1>
-    <p>Web đầu tiên từ GitHub Pages</p>
+
+<h1>🌱 Danh sách cây</h1>
+
+<input type="text" id="search" placeholder="Tìm cây...">
+
+<div id="data"></div>
+
+<script>
+const API = "https://opensheet.elk.sh/1gmiZDIF5BMktjFzySFqYsCZtjYUDf0z_Y1otHiwkm9s/1";
+
+let allData = [];
+
+function render(data) {
+    const container = document.getElementById("data");
+    container.innerHTML = "";
+
+    data.forEach(item => {
+        if (!item.Check) return;
+
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <div class="name">${item.Check}</div>
+            <div class="answer">${item.Answer || ""}</div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+function loadData() {
+    fetch(API)
+        .then(res => res.json())
+        .then(data => {
+            allData = data;
+            render(data);
+        });
+}
+
+document.getElementById("search").addEventListener("input", function() {
+    const keyword = this.value.toLowerCase();
+
+    const filtered = allData.filter(item => 
+        item.Check && item.Check.toLowerCase().includes(keyword)
+    );
+
+    render(filtered);
+});
+
+// load lần đầu
+loadData();
+
+// auto reload mỗi 10s
+setInterval(loadData, 10000);
+</script>
+
 </body>
 </html>
