@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -71,25 +72,30 @@ const API = "https://opensheet.elk.sh/1xT9xqRBkRddx9uPv9gNE0WR0M8TcXw14-vtzGQlsz
 
 let allData = [];
 
+// Lấy tên người có TRUE
 function getName(item) {
-    return item.Answer || item.undefined || "";
+    return Object.keys(item)
+        .filter(key => item[key] === "TRUE" && key !== "XU HOA")
+        .join(", ");
 }
 
+// Render danh sách
 function render(data) {
     const container = document.getElementById("data");
     container.innerHTML = "";
 
     data.forEach(item => {
-        if (!item.Check) return;
+        const tree = item["XU HOA"];
+        if (!tree) return;
 
         const name = getName(item);
-        const hasUser = name && name !== "FALSE";
+        const hasUser = name !== "";
 
         const div = document.createElement("div");
         div.className = "card " + (hasUser ? "true" : "false");
 
         div.innerHTML = `
-            <div class="name">${item.Check}</div>
+            <div class="name">${tree}</div>
             <div class="answer">
                 ${hasUser ? "👤 " + name : "❌ Chưa có người"}
             </div>
@@ -99,35 +105,43 @@ function render(data) {
     });
 }
 
+// Load data từ API
 function loadData() {
     fetch(API)
         .then(res => res.json())
         .then(data => {
             allData = data;
             render(data);
+        })
+        .catch(err => {
+            console.error("Lỗi load data:", err);
         });
 }
 
+// Search
 document.getElementById("search").addEventListener("input", function() {
     const keyword = this.value.toLowerCase();
 
     const filtered = allData.filter(item => {
+        const tree = item["XU HOA"] || "";
         const name = getName(item);
+
         return (
-            item.Check &&
-            (
-                item.Check.toLowerCase().includes(keyword) ||
-                (name && name.toLowerCase().includes(keyword))
-            )
+            tree.toLowerCase().includes(keyword) ||
+            (name && name.toLowerCase().includes(keyword))
         );
     });
 
     render(filtered);
 });
 
+// Load lần đầu
 loadData();
+
+// Auto reload mỗi 10s
 setInterval(loadData, 10000);
 </script>
 
 </body>
 </html>
+
