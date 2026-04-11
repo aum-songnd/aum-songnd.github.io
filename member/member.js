@@ -4,41 +4,48 @@ const API =
 const API2 =
   "https://opensheet.elk.sh/1xT9xqRBkRddx9uPv9gNE0WR0M8TcXw14-vtzGQlszrc/2";
 
-// ảnh fallback
-const DEFAULT_IMAGES = ["../img/mem/Dzit.jpg", "../img/mem/thuy.jpg"];
+// fallback
+const DEFAULT_IMAGE_1 = "../img/mem/viet.jpg"; // lần đầu
+const DEFAULT_IMAGE_2 = "../img/mem/thuy.jpg"; // các lần sau
 
-// biến đếm để đổi ảnh
-let fallbackIndex = 0;
-
-// lưu perks
 let perksData = [];
+let firstErrorUsed = false; // chỉ dùng để đánh dấu lần lỗi đầu tiên
 
 /**
- * 📸 Lấy đường dẫn ảnh
+ * 📸 path ảnh
  */
 function getImagePath(name) {
   return `../img/mem/${encodeURIComponent(name)}.jpg`;
 }
 
 /**
- * ❌ fallback theo thứ tự (người 1 -> img1, người 2 -> img2,...)
+ * ❌ fallback chuẩn
  */
 function handleImageError(img) {
-  const imgFallback = DEFAULT_IMAGES[fallbackIndex % DEFAULT_IMAGES.length];
+  img.onerror = null;
 
-  fallbackIndex++; // tăng lên cho lần sau
+  // nếu ảnh này đã có loại fallback → dùng lại (để đồng bộ)
+  if (img.dataset.fallbackType) {
+    img.src =
+      img.dataset.fallbackType === "first" ? DEFAULT_IMAGE_1 : DEFAULT_IMAGE_2;
+    return;
+  }
 
-  img.onerror = null; // tránh loop
-  img.src = imgFallback;
+  // chưa có → xét lần đầu hay chưa
+  if (!firstErrorUsed) {
+    img.dataset.fallbackType = "first";
+    img.src = DEFAULT_IMAGE_1;
+    firstErrorUsed = true;
+  } else {
+    img.dataset.fallbackType = "default";
+    img.src = DEFAULT_IMAGE_2;
+  }
 }
 
 async function loadMembers() {
   const container = document.getElementById("character-grid");
 
-  if (!container) {
-    console.error("Không tìm thấy #character-grid");
-    return;
-  }
+  if (!container) return;
 
   try {
     const [res1, res2] = await Promise.all([fetch(API), fetch(API2)]);
@@ -58,11 +65,11 @@ async function loadMembers() {
 
       const imgPath = getImagePath(name);
 
-      div.innerHTML = `
-        <img src="${imgPath}" alt="${name}">
-      `;
+      div.innerHTML = `<img src="${imgPath}" alt="${name}">`;
 
       const img = div.querySelector("img");
+
+      // 👇 gắn lỗi
       img.onerror = () => handleImageError(img);
 
       div.onclick = () => {
@@ -78,6 +85,12 @@ async function loadMembers() {
 
         if (bigImg) {
           bigImg.src = imgPath;
+
+          // 👇 QUAN TRỌNG: copy fallbackType từ ảnh nhỏ
+          if (img.dataset.fallbackType) {
+            bigImg.dataset.fallbackType = img.dataset.fallbackType;
+          }
+
           bigImg.onerror = () => handleImageError(bigImg);
         }
 
@@ -105,8 +118,6 @@ async function loadMembers() {
     });
   } catch (err) {
     console.error(err);
-    container.innerHTML =
-      "<p style='color:red; grid-column:1/-1;'>Lỗi tải dữ liệu...</p>";
   }
 }
 
