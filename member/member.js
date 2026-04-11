@@ -6,8 +6,8 @@ const API2 =
 
 // ảnh fallback
 const DEFAULT_IMAGES = [
-  "../img/mem/viet.jpg", // mặc định
-  "../img/mem/Thuy.jpg", // cho "thu"
+  "../img/mem/adzit.jpg", // mặc định
+  "../img/mem/thuyle.jpg", // cho "thu"
 ];
 
 // lưu perks
