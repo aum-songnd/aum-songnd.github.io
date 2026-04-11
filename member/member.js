@@ -5,11 +5,11 @@ const API2 =
   "https://opensheet.elk.sh/1xT9xqRBkRddx9uPv9gNE0WR0M8TcXw14-vtzGQlszrc/2";
 
 // fallback
-const DEFAULT_IMAGE_1 = "../img/mem/viet.jpg"; // lần đầu
-const DEFAULT_IMAGE_2 = "../img/mem/thuy.jpg"; // các lần sau
+const DEFAULT_IMAGE_1 = "../img/mem/viet.jpg"; // vị trí 11
+const DEFAULT_IMAGE_2 = "../img/mem/thuy.jpg"; // vị trí 14
+const DEFAULT_IMAGE_OTHER = "../img/mem/viet.jpg"; // còn lại
 
 let perksData = [];
-let firstErrorUsed = false; // chỉ dùng để đánh dấu lần lỗi đầu tiên
 
 /**
  * 📸 path ảnh
@@ -19,32 +19,24 @@ function getImagePath(name) {
 }
 
 /**
- * ❌ fallback chuẩn
+ * ❌ fallback theo vị trí FIX CỨNG
  */
 function handleImageError(img) {
   img.onerror = null;
 
-  // nếu ảnh này đã có loại fallback → dùng lại (để đồng bộ)
-  if (img.dataset.fallbackType) {
-    img.src =
-      img.dataset.fallbackType === "first" ? DEFAULT_IMAGE_1 : DEFAULT_IMAGE_2;
-    return;
-  }
+  const index = parseInt(img.dataset.index);
 
-  // chưa có → xét lần đầu hay chưa
-  if (!firstErrorUsed) {
-    img.dataset.fallbackType = "first";
+  if (index === 9) {
     img.src = DEFAULT_IMAGE_1;
-    firstErrorUsed = true;
-  } else {
-    img.dataset.fallbackType = "default";
+  } else if (index === 11) {
     img.src = DEFAULT_IMAGE_2;
+  } else {
+    img.src = DEFAULT_IMAGE_OTHER;
   }
 }
 
 async function loadMembers() {
   const container = document.getElementById("character-grid");
-
   if (!container) return;
 
   try {
@@ -59,7 +51,7 @@ async function loadMembers() {
       (key) => key !== "Hoa" && key !== "Ảnh",
     );
 
-    members.forEach((name) => {
+    members.forEach((name, index) => {
       const div = document.createElement("div");
       div.className = "character-portrait";
 
@@ -69,7 +61,10 @@ async function loadMembers() {
 
       const img = div.querySelector("img");
 
-      // 👇 gắn lỗi
+      // 👇 gán index
+      img.dataset.index = index;
+
+      // 👇 fallback
       img.onerror = () => handleImageError(img);
 
       div.onclick = () => {
@@ -84,13 +79,8 @@ async function loadMembers() {
         const perksList = document.getElementById("perks-list");
 
         if (bigImg) {
+          bigImg.dataset.index = index;
           bigImg.src = imgPath;
-
-          // 👇 QUAN TRỌNG: copy fallbackType từ ảnh nhỏ
-          if (img.dataset.fallbackType) {
-            bigImg.dataset.fallbackType = img.dataset.fallbackType;
-          }
-
           bigImg.onerror = () => handleImageError(bigImg);
         }
 
