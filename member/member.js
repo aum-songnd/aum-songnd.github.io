@@ -5,13 +5,24 @@ const API2 =
   "https://opensheet.elk.sh/1xT9xqRBkRddx9uPv9gNE0WR0M8TcXw14-vtzGQlszrc/2";
 
 // ảnh fallback
-const DEFAULT_IMAGES = ["../img/mem/viet.jpg", "../img/mem/thuy.jpg"];
-
-// biến đếm để đổi ảnh
-let fallbackIndex = 0;
+const DEFAULT_IMAGES = [
+  "../img/mem/viet.jpg", // mặc định
+  "../img/mem/thuy.jpg", // cho "thu"
+];
 
 // lưu perks
 let perksData = [];
+
+/**
+ * 🔤 Chuẩn hoá tên (bỏ dấu + lowercase)
+ */
+function normalizeName(name) {
+  return name
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 /**
  * 📸 Lấy đường dẫn ảnh
@@ -21,15 +32,18 @@ function getImagePath(name) {
 }
 
 /**
- * ❌ fallback theo thứ tự (người 1 -> img1, người 2 -> img2,...)
+ * ❌ fallback theo tên (KHÔNG random)
  */
-function handleImageError(img) {
-  const imgFallback = DEFAULT_IMAGES[fallbackIndex % DEFAULT_IMAGES.length];
+function handleImageError(img, name) {
+  img.onerror = null;
 
-  fallbackIndex++; // tăng lên cho lần sau
+  const n = normalizeName(name);
 
-  img.onerror = null; // tránh loop
-  img.src = imgFallback;
+  if (n.startsWith("thu")) {
+    img.src = DEFAULT_IMAGES[1]; // thuy
+  } else {
+    img.src = DEFAULT_IMAGES[0]; // viet
+  }
 }
 
 async function loadMembers() {
@@ -63,7 +77,7 @@ async function loadMembers() {
       `;
 
       const img = div.querySelector("img");
-      img.onerror = () => handleImageError(img);
+      img.onerror = () => handleImageError(img, name);
 
       div.onclick = () => {
         document
@@ -78,7 +92,7 @@ async function loadMembers() {
 
         if (bigImg) {
           bigImg.src = imgPath;
-          bigImg.onerror = () => handleImageError(bigImg);
+          bigImg.onerror = () => handleImageError(bigImg, name);
         }
 
         if (charName) {
