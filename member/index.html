@@ -8,6 +8,47 @@
     <link rel="stylesheet" href="member.css" />
 
     <style>
+      /* ==================== THÊM CSS CHO NÚT NHẠC GIỐNG TRANG CHỦ ==================== */
+      .music-btn {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background: #2c2118;
+        border: 5px solid #5c4633;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: #f4d03f;
+        cursor: pointer;
+        box-shadow: 0 6px 0 #000;
+        z-index: 1000;
+        transition: all 0.3s ease;
+      }
+
+      .music-btn:hover {
+        transform: scale(1.1);
+        border-color: #f4d03f;
+      }
+
+      .music-btn.playing {
+        animation: rotateMusic 4s linear infinite;
+        background: #3c2a1f;
+      }
+
+      @keyframes rotateMusic {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ==================== STYLE CÒN LẠI (giữ nguyên) ==================== */
       body {
         background: #1a120b url("../img/img2.jpg") center/cover;
         color: #e8d5a3;
@@ -90,7 +131,6 @@
         box-shadow: 0 0 25px #f4d03f;
       }
 
-      /* ✅ OVERLAY nền mờ */
       .overlay {
         position: fixed;
         inset: 0;
@@ -99,7 +139,6 @@
         display: none;
       }
 
-      /* ✅ BIG PORTRAIT CENTER */
       .big-portrait {
         position: fixed;
         top: 50%;
@@ -117,10 +156,6 @@
       .big-portrait.show {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1);
-      }
-
-      .big-portrait img {
-        width: 100%;
       }
 
       .character-name {
@@ -144,57 +179,53 @@
         color: #f4d03f;
       }
 
-      /* ================= MOBILE RESPONSIVE ================= */
       @media (max-width: 768px) {
         .wrapper {
           margin: 10px;
           padding: 12px;
           border-width: 5px;
         }
-
         h1 {
           font-size: 2.2rem;
           letter-spacing: 2px;
           margin-bottom: 20px;
         }
-
         .back-btn {
           font-size: 1rem;
           padding: 8px 14px;
         }
-
-        /* grid gọn lại */
         .character-grid {
           grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
           gap: 12px;
         }
-
         .character-portrait {
           width: 80px;
           height: 95px;
           border-width: 4px;
         }
-
-        /* popup nhỏ lại + không tràn màn */
         .big-portrait {
           width: 90%;
           max-width: 320px;
           padding-bottom: 10px;
         }
-
         .character-name {
           font-size: 1.6rem;
-          letter-spacing: 1px;
         }
-
         .perks {
           font-size: 0.95rem;
           padding: 0 12px;
         }
+
+        .music-btn {
+          width: 50px;
+          height: 50px;
+          font-size: 24px;
+          bottom: 20px;
+          right: 20px;
+        }
       }
     </style>
   </head>
-
   <body>
     <div class="wrapper">
       <h1>🐍 HỘI GẮN GÍCH 🐍</h1>
@@ -204,39 +235,42 @@
       </div>
 
       <div style="text-align: center; margin-bottom: 30px">
-        <span style="font-size: 2.2rem; color: #c9a96e">
-          Character Select
-        </span>
+        <span style="font-size: 2.2rem; color: #c9a96e">Character Select</span>
       </div>
 
       <div id="character-grid" class="character-grid"></div>
     </div>
 
-    <!-- ✅ overlay -->
+    <!-- Overlay + Popup -->
     <div id="overlay" class="overlay"></div>
-
-    <!-- ✅ popup giữa màn hình -->
     <div id="big-portrait-container" class="big-portrait">
       <img id="big-portrait-img" src="" />
       <div id="char-name" class="character-name"></div>
       <ul id="perks-list" class="perks"></ul>
     </div>
 
+    <!-- ==================== NÚT NHẠC & AUDIO ==================== -->
+    <div class="music-btn" id="musicBtn" onclick="toggleMusic()">
+      <span id="musicIcon">♪</span>
+    </div>
+
+    <audio id="bgMusic" loop>
+      <source src="../audio/lofi3.mp3" type="audio/mpeg" />
+    </audio>
+
     <script src="member.js" defer></script>
 
-    <!-- ✅ JS điều khiển popup -->
+    <!-- Script popup -->
     <script>
       const overlay = document.getElementById("overlay");
       const big = document.getElementById("big-portrait-container");
 
-      // hiện popup
       function showPopup() {
         overlay.style.display = "block";
         big.style.display = "block";
         setTimeout(() => big.classList.add("show"), 10);
       }
 
-      // ẩn popup
       function hidePopup() {
         big.classList.remove("show");
         setTimeout(() => {
@@ -246,6 +280,95 @@
       }
 
       overlay.onclick = hidePopup;
+    </script>
+
+    <!-- ==================== SCRIPT NHẠC (Tiếp tục vị trí cũ + quay) ==================== -->
+    <script>
+      const audio = document.getElementById("bgMusic");
+      const icon = document.getElementById("musicIcon");
+      const musicBtn = document.getElementById("musicBtn");
+
+      function toggleMusic() {
+        if (audio.paused) {
+          playMusic();
+        } else {
+          pauseMusic();
+        }
+      }
+
+      function playMusic() {
+        audio
+          .play()
+          .then(() => {
+            icon.textContent = "♪";
+            musicBtn.classList.add("playing");
+            localStorage.setItem("musicPlaying", "true");
+          })
+          .catch(() => {});
+      }
+
+      function pauseMusic() {
+        audio.pause();
+        icon.textContent = "▶";
+        musicBtn.classList.remove("playing");
+        localStorage.setItem("musicPlaying", "false");
+      }
+
+      function saveCurrentTime() {
+        if (!audio.paused) {
+          localStorage.setItem(
+            "musicCurrentTime",
+            audio.currentTime.toString(),
+          );
+        }
+      }
+
+      function initMusic() {
+        const savedTime =
+          parseFloat(localStorage.getItem("musicCurrentTime")) || 0;
+        const shouldPlay = localStorage.getItem("musicPlaying") !== "false";
+
+        audio.currentTime = savedTime;
+
+        if (shouldPlay) {
+          audio
+            .play()
+            .then(() => {
+              icon.textContent = "♪";
+              musicBtn.classList.add("playing");
+            })
+            .catch(() => {
+              icon.textContent = "▶";
+              musicBtn.classList.remove("playing");
+            });
+        } else {
+          icon.textContent = "▶";
+          musicBtn.classList.remove("playing");
+        }
+      }
+
+      // Lưu thời gian mỗi giây
+      setInterval(saveCurrentTime, 1000);
+      window.addEventListener("beforeunload", saveCurrentTime);
+
+      // Khởi chạy nhạc
+      window.addEventListener("load", () => {
+        initMusic();
+
+        // Backup click
+        document.addEventListener(
+          "click",
+          () => {
+            if (
+              audio.paused &&
+              localStorage.getItem("musicPlaying") !== "false"
+            ) {
+              playMusic();
+            }
+          },
+          { once: true },
+        );
+      });
     </script>
   </body>
 </html>

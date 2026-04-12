@@ -16,7 +16,6 @@
       <nav class="menu">
         <a href="index.html" class="menu-item active">🌿 Vườn cây</a>
         <a href="member/index.html" class="menu-item">👥 Thành viên</a>
-        <!-- <a href="game/index.html" class="menu-item game">👥 Đập chuột</a> -->
       </nav>
 
       <div class="search-wrap">
@@ -33,28 +32,98 @@
       <p id="hint">Nhập ít nhất 2 ký tự để tìm kiếm</p>
       <div id="data"></div>
     </div>
+
     <div class="music-btn" id="musicBtn" onclick="toggleMusic()">
-      <span id="musicIcon">▶</span>
+      <span id="musicIcon">♪</span>
     </div>
 
     <audio id="bgMusic" loop>
-      <source src="audio/lofi3.mp3" />
+      <source src="audio/lofi3.mp3" type="audio/mpeg" />
     </audio>
 
     <script>
+      const audio = document.getElementById("bgMusic");
+      const icon = document.getElementById("musicIcon");
+      const musicBtn = document.getElementById("musicBtn");
+
       function toggleMusic() {
-        const audio = document.getElementById("bgMusic");
-        const icon = document.getElementById("musicIcon");
         if (audio.paused) {
-          audio.play();
-          icon.textContent = "♪";
-          document.getElementById("musicBtn").classList.add("playing");
+          playMusic();
         } else {
-          audio.pause();
-          icon.textContent = "▶";
-          document.getElementById("musicBtn").classList.remove("playing");
+          pauseMusic();
         }
       }
+
+      function playMusic() {
+        audio
+          .play()
+          .then(() => {
+            icon.textContent = "♪";
+            musicBtn.classList.add("playing");
+            localStorage.setItem("musicPlaying", "true");
+          })
+          .catch(() => {});
+      }
+
+      function pauseMusic() {
+        audio.pause();
+        icon.textContent = "▶";
+        musicBtn.classList.remove("playing");
+        localStorage.setItem("musicPlaying", "false");
+      }
+
+      function saveCurrentTime() {
+        if (!audio.paused) {
+          localStorage.setItem(
+            "musicCurrentTime",
+            audio.currentTime.toString(),
+          );
+        }
+      }
+
+      function initMusic() {
+        const savedTime =
+          parseFloat(localStorage.getItem("musicCurrentTime")) || 0;
+        const shouldPlay = localStorage.getItem("musicPlaying") !== "false";
+
+        audio.currentTime = savedTime;
+
+        if (shouldPlay) {
+          audio
+            .play()
+            .then(() => {
+              icon.textContent = "♪";
+              musicBtn.classList.add("playing");
+            })
+            .catch(() => {
+              icon.textContent = "▶";
+              musicBtn.classList.remove("playing");
+            });
+        } else {
+          icon.textContent = "▶";
+          musicBtn.classList.remove("playing");
+        }
+      }
+
+      setInterval(saveCurrentTime, 1000);
+      window.addEventListener("beforeunload", saveCurrentTime);
+
+      window.addEventListener("load", () => {
+        initMusic();
+
+        document.addEventListener(
+          "click",
+          () => {
+            if (
+              audio.paused &&
+              localStorage.getItem("musicPlaying") !== "false"
+            ) {
+              playMusic();
+            }
+          },
+          { once: true },
+        );
+      });
     </script>
     <script src="js/main.js"></script>
   </body>
