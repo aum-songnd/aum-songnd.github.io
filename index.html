@@ -33,7 +33,29 @@
       <p id="hint">Nhập ít nhất 2 ký tự để tìm kiếm</p>
       <div id="data"></div>
     </div>
+    <div class="music-btn" id="musicBtn" onclick="toggleMusic()">
+      <span id="musicIcon">▶</span>
+    </div>
 
+    <audio id="bgMusic" loop>
+      <source src="audio/lofi2.mp3" />
+    </audio>
+
+    <script>
+      function toggleMusic() {
+        const audio = document.getElementById("bgMusic");
+        const icon = document.getElementById("musicIcon");
+        if (audio.paused) {
+          audio.play();
+          icon.textContent = "♪";
+          document.getElementById("musicBtn").classList.add("playing");
+        } else {
+          audio.pause();
+          icon.textContent = "▶";
+          document.getElementById("musicBtn").classList.remove("playing");
+        }
+      }
+    </script>
     <script src="js/main.js"></script>
   </body>
 </html>

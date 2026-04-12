@@ -177,3 +177,54 @@ input[type="text"]:focus {
     object-fit: contain;
   }
 }
+
+@media (pointer: fine) {
+  * {
+    cursor:
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><text y='26' font-size='26'>🐍</text></svg>")
+        0 0,
+      auto !important;
+  }
+}
+
+.music-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2d2d2d;
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999;
+  border: 2px solid #555;
+  transition:
+    transform 0.2s,
+    background 0.2s;
+  user-select: none;
+}
+
+.music-btn:hover {
+  background: #444;
+  transform: scale(1.1);
+}
+
+.music-btn.playing {
+  animation: spin 3s linear infinite;
+  background: #3a7d44;
+  border-color: #5cb85c;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
