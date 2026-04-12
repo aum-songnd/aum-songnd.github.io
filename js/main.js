@@ -37,7 +37,7 @@ function render(data) {
 
     div.innerHTML = `
       <div class="card-img">
-        <img src="img/hoa/${imgIndex}.png"
+        <img src="https://aum-songnd.github.io/img/hoa/${imgIndex}.png"
              onerror="this.src='img/hoa/001.png'">
       </div>
 
