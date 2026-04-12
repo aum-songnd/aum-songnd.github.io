@@ -162,3 +162,18 @@ input[type="text"]:focus {
   color: #4cff72;
   border-color: rgba(76, 255, 114, 0.4);
 }
+
+.card-img {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+  }
+}

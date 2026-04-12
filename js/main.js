@@ -10,6 +10,7 @@ function getName(item) {
     .join(", ");
 }
 
+// 🔥 FIX: render đúng index gốc -> ảnh không bao giờ lệch
 function render(data) {
   const container = document.getElementById("data");
   container.innerHTML = "";
@@ -28,12 +29,22 @@ function render(data) {
     const name = getName(item);
     const hasUser = name !== "";
 
+    // 🔥 dùng index gốc đã gắn từ lúc load
+    const imgIndex = String(item.originalIndex).padStart(3, "0");
+
     const div = document.createElement("div");
     div.className = "card " + (hasUser ? "has-user" : "no-user");
+
     div.innerHTML = `
-            <div class="name">${tree}</div>
-            <div class="answer">${hasUser ? "👤 " + name : "❌ Chưa có người"}</div>
-        `;
+      <div class="card-img">
+        <img src="img/hoa/${imgIndex}.png"
+             onerror="this.src='img/hoa/001.png'">
+      </div>
+
+      <div class="name">${tree}</div>
+      <div class="answer">${hasUser ? "👤 " + name : "❌ Chưa có người"}</div>
+    `;
+
     frag.appendChild(div);
   });
 
@@ -48,7 +59,13 @@ function render(data) {
 async function loadData() {
   try {
     const res = await fetch(API);
-    allData = await res.json();
+    const json = await res.json();
+
+    // 🔥 FIX QUAN TRỌNG: gắn index cố định 001–252
+    allData = json.map((item, index) => ({
+      ...item,
+      originalIndex: index + 1,
+    }));
   } catch (err) {
     document.getElementById("data").innerHTML =
       '<p class="loading">Lỗi tải dữ liệu. Vui lòng thử lại.</p>';
@@ -60,6 +77,7 @@ let debounceTimer;
 
 document.getElementById("search").addEventListener("input", function () {
   clearTimeout(debounceTimer);
+
   const keyword = this.value.toLowerCase().trim();
 
   if (keyword.length < 2) {
