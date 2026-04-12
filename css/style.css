@@ -40,6 +40,68 @@ h1 {
   letter-spacing: 1px;
 }
 
+.title {
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+}
+
+/* CHỮ bị ẩn ban đầu */
+.text {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transform: scaleX(0);
+  transition: all 0.6s ease;
+}
+
+/* 2 con rắn ban đầu nằm sát giữa */
+.snake {
+  display: inline-block;
+  transition: all 0.6s ease;
+}
+
+/* HOVER hoặc FOCUS */
+.title:hover .text,
+.title:focus .text {
+  max-width: 300px;
+  opacity: 1;
+  transform: scaleX(1);
+  font-size: 20px;
+}
+
+/* tách sang 2 bên */
+.title:hover .left,
+.title:focus .left {
+  transform: translateX(-60px) rotate(-15deg);
+}
+
+.title:hover .right,
+.title:focus .right {
+  transform: translateX(60px) rotate(15deg);
+}
+
+/* hiệu ứng bò nhẹ */
+.title:hover .snake,
+.title:focus .snake {
+  animation: snakeMove 0.4s infinite alternate;
+}
+
+@keyframes snakeMove {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-3px);
+  }
+}
+
 .search-wrap {
   position: sticky;
   top: 0;
