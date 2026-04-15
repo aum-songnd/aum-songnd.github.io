@@ -37,8 +37,8 @@ function render(data) {
 
     div.innerHTML = `
       <div class="card-img">
-        <img src="https://aum-songnd.github.io/img/hoa/${imgIndex}.png"
-             onerror="this.src='img/hoa/001.png'">
+        <img src="https://aum-songnd.github.io/img/hoa/${imgIndex}.webp"
+             onerror="this.src='img/hoa/001.webp'">
       </div>
 
       <div class="name">${tree}</div>
