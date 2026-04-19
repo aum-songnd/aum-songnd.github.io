@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🐺 Ma Sói Pro+</title>
+
+    <style>
+      body {
+        margin: 0;
+        background: #0f172a;
+        color: white;
+        font-family: Arial;
+      }
+
+      /* MOBILE FIRST */
+      .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      .header {
+        padding: 10px;
+        background: #1e293b;
+      }
+
+      .players {
+        display: flex;
+        overflow-x: auto;
+        gap: 8px;
+        padding: 8px;
+      }
+
+      .player {
+        background: #334155;
+        padding: 6px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+      }
+
+      .chat {
+        flex: 1;
+        overflow: auto;
+        padding: 10px;
+      }
+
+      .msg {
+        margin: 5px 0;
+      }
+      .me {
+        color: #22c55e;
+      }
+
+      .input-chat {
+        display: flex;
+        padding: 10px;
+        background: #1e293b;
+      }
+
+      .input-chat input {
+        flex: 1;
+      }
+
+      .actions {
+        padding: 10px;
+        background: #020617;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      button {
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: #22c55e;
+        cursor: pointer;
+        flex: 1;
+      }
+
+      /* DESKTOP */
+      @media (min-width: 768px) {
+        .container {
+          flex-direction: row;
+        }
+        .left {
+          width: 280px;
+          background: #1e293b;
+          padding: 10px;
+        }
+        .right {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="left">
+        <input id="name" placeholder="Tên" />
+        <button onclick="createRoom()">Tạo</button>
+        <button onclick="joinRoom()">Vào</button>
+        <button onclick="toggleReady()">Ready</button>
+        <button id="startBtn" onclick="startGame()">Start</button>
+
+        <div id="room"></div>
+        <div id="phase"></div>
+        <div id="role"></div>
+      </div>
+
+      <div class="right">
+        <div class="players" id="players"></div>
+
+        <div class="chat" id="chat"></div>
+
+        <div class="input-chat">
+          <input id="msg" />
+          <button onclick="sendMsg()">Gửi</button>
+        </div>
+
+        <div class="actions" id="actions"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+      import {
+        getFirestore,
+        doc,
+        setDoc,
+        getDoc,
+        updateDoc,
+        onSnapshot,
+      } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSy...",
+        authDomain: "masoi-38709.firebaseapp.com",
+        projectId: "masoi-38709",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      let room = null,
+        name = "";
+
+      // ===== CREATE =====
+      window.createRoom = async () => {
+        name = getName();
+        let id = rand();
+
+        await setDoc(doc(db, "rooms", id), {
+          players: [name],
+          host: name,
+          roles: {},
+          alive: [],
+          phase: "waiting",
+          votes: {},
+          nightKill: null,
+          protect: null,
+          messages: [],
+          ready: {},
+          countdown: null,
+        });
+
+        join(id);
+      };
+
+      // ===== JOIN =====
+      window.joinRoom = async () => {
+        name = getName();
+        let id = prompt("Room ID");
+        join(id);
+      };
+
+      async function join(id) {
+        room = id;
+        let ref = doc(db, "rooms", id);
+        let snap = await getDoc(ref);
+
+        let data = snap.data();
+
+        if (!data.players.includes(name)) {
+          data.players.push(name);
+          await updateDoc(ref, { players: data.players });
+        }
+
+        listen(ref);
+      }
+
+      // ===== READY =====
+      window.toggleReady = async () => {
+        let ref = doc(db, "rooms", room);
+        let snap = await getDoc(ref);
+        let d = snap.data();
+
+        let r = d.ready || {};
+        r[name] = !r[name];
+
+        await updateDoc(ref, { ready: r });
+      };
+
+      // ===== START =====
+      window.startGame = async () => {
+        let ref = doc(db, "rooms", room);
+        let snap = await getDoc(ref);
+        let d = snap.data();
+
+        if (d.host !== name) return;
+
+        let allReady = d.players.every((p) => d.ready[p]);
+        if (!allReady) return alert("Chưa ready");
+
+        await updateDoc(ref, { countdown: 5 });
+      };
+
+      // ===== CHAT =====
+      window.sendMsg = async () => {
+        let text = document.getElementById("msg").value;
+        if (!text) return;
+
+        let ref = doc(db, "rooms", room);
+        let snap = await getDoc(ref);
+        let d = snap.data();
+
+        let m = d.messages || [];
+        m.push({ name, text });
+
+        await updateDoc(ref, { messages: m });
+        msg.value = "";
+      };
+
+      // ===== ACTION =====
+      window.kill = async (t) => {
+        await updateDoc(doc(db, "rooms", room), { nightKill: t });
+      };
+
+      window.protect = async (t) => {
+        await updateDoc(doc(db, "rooms", room), { protect: t });
+      };
+
+      window.see = async (t) => {
+        let ref = doc(db, "rooms", room);
+        let snap = await getDoc(ref);
+        let d = snap.data();
+
+        alert(t + " là " + d.roles[t]); // ⚠️ demo
+      };
+
+      window.vote = async (t) => {
+        let ref = doc(db, "rooms", room);
+        let snap = await getDoc(ref);
+        let d = snap.data();
+
+        d.votes[name] = t;
+        await updateDoc(ref, { votes: d.votes });
+      };
+
+      // ===== REALTIME =====
+      function listen(ref) {
+        onSnapshot(ref, (snap) => {
+          let d = snap.data();
+          updateUI(d, ref);
+        });
+      }
+
+      // ===== UI =====
+      async function updateUI(d, ref) {
+        roomUI(d);
+        chatUI(d);
+        playerUI(d);
+        actionUI(d, ref);
+
+        // countdown
+        if (d.countdown !== null && d.countdown > 0) {
+          setTimeout(async () => {
+            let snap2 = await getDoc(ref);
+            let d2 = snap2.data();
+
+            let allReady = d2.players.every((p) => d2.ready[p]);
+
+            if (!allReady) {
+              await updateDoc(ref, { countdown: null });
+              return;
+            }
+
+            await updateDoc(ref, { countdown: d2.countdown - 1 });
+          }, 1000);
+        }
+
+        // start
+        if (d.countdown === 0) {
+          let roles = {};
+          let alive = [...d.players];
+
+          // phân role
+          roles[alive[0]] = "wolf";
+          roles[alive[1]] = "seer";
+          roles[alive[2]] = "guard";
+
+          alive.slice(3).forEach((p) => (roles[p] = "villager"));
+
+          await updateDoc(ref, {
+            roles,
+            alive,
+            phase: "night",
+            countdown: null,
+          });
+        }
+      }
+
+      function roomUI(d) {
+        roomEl.innerText = "Room: " + room;
+
+        phase.innerText =
+          d.countdown !== null ? "Start: " + d.countdown : "Phase: " + d.phase;
+
+        if (d.roles[name]) {
+          role.innerText = d.roles[name];
+        }
+      }
+
+      function playerUI(d) {
+        players.innerHTML = d.players
+          .map((p) => {
+            let r = d.ready[p] ? "✅" : "❌";
+            return `<div class="player">${p} ${r}</div>`;
+          })
+          .join("");
+      }
+
+      function chatUI(d) {
+        let msgs = d.messages || [];
+        chat.innerHTML = msgs
+          .map(
+            (m) =>
+              `<div class="msg ${m.name === name ? "me" : ""}">
+      <b>${m.name}:</b> ${m.text}
+    </div>`,
+          )
+          .join("");
+
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      async function actionUI(d, ref) {
+        actions.innerHTML = "";
+
+        let myRole = d.roles[name];
+
+        if (d.phase === "night") {
+          if (myRole === "wolf") {
+            d.alive.forEach((p) => {
+              if (p !== name)
+                actions.innerHTML += `<button onclick="kill('${p}')">🐺 ${p}</button>`;
+            });
+          }
+
+          if (myRole === "guard") {
+            d.alive.forEach((p) => {
+              actions.innerHTML += `<button onclick="protect('${p}')">🛡️ ${p}</button>`;
+            });
+          }
+
+          if (myRole === "seer") {
+            d.alive.forEach((p) => {
+              if (p !== name)
+                actions.innerHTML += `<button onclick="see('${p}')">🔮 ${p}</button>`;
+            });
+          }
+
+          // resolve night
+          if (d.nightKill) {
+            let dead = d.nightKill === d.protect ? null : d.nightKill;
+
+            let alive = dead ? d.alive.filter((p) => p !== dead) : d.alive;
+
+            await updateDoc(ref, {
+              alive,
+              phase: "day",
+              nightKill: null,
+              protect: null,
+              votes: {},
+            });
+          }
+        }
+
+        if (d.phase === "day") {
+          d.alive.forEach((p) => {
+            if (p !== name)
+              actions.innerHTML += `<button onclick="vote('${p}')">Vote ${p}</button>`;
+          });
+
+          if (Object.keys(d.votes).length === d.alive.length) {
+            let c = {};
+            Object.values(d.votes).forEach((v) => (c[v] = (c[v] || 0) + 1));
+
+            let dead = Object.keys(c).reduce((a, b) => (c[a] > c[b] ? a : b));
+            let alive = d.alive.filter((p) => p !== dead);
+
+            await updateDoc(ref, { alive, phase: "night", votes: {} });
+          }
+        }
+      }
+
+      // ===== UTIL =====
+      function getName() {
+        let n = nameEl.value;
+        if (!n) throw alert("Nhập tên");
+        return n;
+      }
+
+      function rand() {
+        return Math.random().toString(36).substring(2, 7);
+      }
+
+      // DOM
+      const nameEl = document.getElementById("name");
+      const roomEl = document.getElementById("room");
+      const phase = document.getElementById("phase");
+      const role = document.getElementById("role");
+      const players = document.getElementById("players");
+      const chat = document.getElementById("chat");
+      const msg = document.getElementById("msg");
+      const actions = document.getElementById("actions");
+    </script>
+  </body>
+</html>
