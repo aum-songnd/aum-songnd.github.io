@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase Counter</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background:
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+        url(fly.webp) center/cover no-repeat;
+}
+
+.card {
+    width: 100%;
+    max-width: 460px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    padding: 32px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    text-align: center;
+}
+
+.logo-img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+h1 {
+    margin-bottom: 12px;
+    color: #111;
+    font-size: 28px;
+}
+
+p {
+    color: #555;
+    margin-bottom: 24px;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.count {
+    font-size: 64px;
+    font-weight: bold;
+    color: #2563eb;
+    margin: 20px 0;
+}
+
+button {
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    opacity: 0.95;
+}
+
+.note {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #777;
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 24px;
+        border-radius: 20px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .count {
+        font-size: 52px;
+    }
+
+    button {
+        padding: 14px;
+        font-size: 15px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+    <img
+        class="logo-img"
+        src="/fly/fly.webp"
+        alt="Music Counter"
+    >
+
+    <h1>Số lần bay</h1>
+
+    <p>
+        Mỗi lần bấm nút sẽ tăng số đếm<br>
+    </p>
+
+    <div class="count" id="counter">0</div>
+
+    <button id="actionBtn">
+        Bay
+    </button>
+
+    <div class="note" id="currentTime">
+        Đang tải thời gian...
+    </div>
+
+    <div class="note">
+        Tự động reset vào 00:00 Thứ 3 hàng tuần
+    </div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    increment
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBSyK4N22BpisoxGhY4blm7a4esYWgaVHw",
+    authDomain: "music-cf53c.firebaseapp.com",
+    projectId: "music-cf53c",
+    storageBucket: "music-cf53c.firebasestorage.app",
+    messagingSenderId: "257693769172",
+    appId: "1:257693769172:web:2fe9d768a9380e2f2a0a41",
+    measurementId: "G-SFYW6XKFJ3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const counterEl = document.getElementById("counter");
+const actionBtn = document.getElementById("actionBtn");
+const counterRef = doc(db, "system", "counter");
+const timeEl = document.getElementById("currentTime");
+
+function updateCurrentTime() {
+    const now = new Date();
+    const formatted = now.toLocaleString("vi-VN", {
+        weekday: "long",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+
+    timeEl.innerText = formatted;
+}
+
+async function checkWeeklyReset() {
+    try {
+        const snapshot = await getDoc(counterRef);
+        const now = new Date();
+
+        // JS: Chủ nhật = 0, Thứ 2 = 1, Thứ 3 = 2
+        const isTuesdayMidnight =
+            now.getDay() === 2 &&
+            now.getHours() === 0;
+
+        if (!snapshot.exists()) {
+            await setDoc(counterRef, {
+                total: 0,
+                lastResetDate: now.toDateString()
+            });
+            return;
+        }
+
+        const data = snapshot.data();
+        const lastResetDate = data.lastResetDate || "";
+
+        if (isTuesdayMidnight && lastResetDate !== now.toDateString()) {
+            await setDoc(counterRef, {
+                total: 0,
+                lastResetDate: now.toDateString()
+            });
+        }
+    } catch (error) {
+        console.error("Lỗi reset tuần:", error);
+    }
+}
+
+async function loadCounter() {
+    try {
+        const snapshot = await getDoc(counterRef);
+
+        if (!snapshot.exists()) {
+            await setDoc(counterRef, { total: 0 });
+            counterEl.innerText = 0;
+            return;
+        }
+
+        counterEl.innerText = snapshot.data().total || 0;
+    } catch (error) {
+        console.error("Lỗi load counter:", error);
+    }
+}
+
+async function increaseCounter() {
+    try {
+        let current = parseInt(counterEl.innerText) || 0;
+        current += 1;
+        counterEl.innerText = current;
+
+        const snapshot = await getDoc(counterRef);
+
+        if (!snapshot.exists()) {
+            await setDoc(counterRef, { total: current });
+            return;
+        }
+
+        await updateDoc(counterRef, {
+            total: increment(1)
+        });
+    } catch (error) {
+        console.error("Lỗi tăng counter:", error);
+    }
+}
+
+actionBtn.addEventListener("click", increaseCounter);
+
+updateCurrentTime();
+setInterval(updateCurrentTime, 1000);
+
+checkWeeklyReset().then(() => {
+    loadCounter();
+});
+
+</script>
+
+</body>
+</html>

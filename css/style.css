@@ -215,6 +215,12 @@ input[type="text"]:focus {
   justify-content: center;
   margin-bottom: 20px;
 }
+.menu2{
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
 
 .menu-item {
   text-decoration: none;
