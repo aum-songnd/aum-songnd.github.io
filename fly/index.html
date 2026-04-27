@@ -135,7 +135,7 @@ button:hover {
     </div>
 
     <div class="note">
-        Tự động reset vào 00:00 Thứ 3 hàng tuần
+        Tự động reset vào 00:00 Thứ 2 hàng tuần
     </div>
 </div>
 
@@ -192,7 +192,7 @@ async function checkWeeklyReset() {
 
         // JS: Chủ nhật = 0, Thứ 2 = 1, Thứ 3 = 2
         const isTuesdayMidnight =
-            now.getDay() === 2 &&
+            now.getDay() === 1 &&
             now.getHours() === 0;
 
         if (!snapshot.exists()) {
