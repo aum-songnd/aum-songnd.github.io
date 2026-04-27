@@ -220,6 +220,7 @@ input[type="text"]:focus {
   gap: 8px;
   justify-content: center;
   margin-bottom: 20px;
+  padding-bottom:20px ;
 }
 
 .menu-item {
