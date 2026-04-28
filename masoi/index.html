@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🐺 Ma Sói Online</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
-<style>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🐺 Ma Sói Online</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet" />
+    <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#080c14;--surface:#0d1526;--card:#111d35;--border:#1e3050;
@@ -220,150 +222,172 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
   .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);max-height:180px}
 }
 </style>
-</head>
-<body>
-<div class="wrapper">
+  </head>
+  <body>
+    <div class="wrapper">
 
-<!-- HEADER -->
-<div class="header">
-  <h1>🐺 Ma <span>Sói</span> Online</h1>
-  <span class="badge" id="header-badge">Sảnh chờ</span>
-  <span class="room-id" id="room-id-display" style="display:none">Phòng: <span id="room-id-text"></span></span>
-</div>
+      <!-- HEADER -->
+      <div class="header">
+        <h1>🐺 Ma <span>Sói</span> Online</h1>
+        <span class="badge" id="header-badge">Sảnh chờ</span>
+        <span class="room-id" id="room-id-display" style="display:none">Phòng:
+          <span id="room-id-text"></span></span>
+      </div>
 
-<!-- LOBBY -->
-<div id="lobby-view">
-<div class="lobby-card">
-  <h2>🌙 Ma Sói Trực Tuyến</h2>
-  <p>Chơi cùng bạn bè theo thời gian thực qua Firebase. Tạo phòng hoặc nhập mã để tham gia.</p>
-  <div class="sep"></div>
-  <div>
-    <div class="section-label">Tên của bạn</div>
-    <input class="inp" id="inp-name" placeholder="Nhập tên người chơi..." maxlength="16"/>
-  </div>
-  <div class="btn-row">
-    <button class="btn primary" onclick="createRoom()">➕ Tạo phòng</button>
-    <button class="btn" onclick="showJoinInput()">🔗 Vào phòng</button>
-  </div>
-  <div id="join-input-wrap" style="display:none">
-    <input class="inp" id="inp-room-id" placeholder="Nhập mã phòng (5 ký tự)..." maxlength="5" style="text-transform:uppercase"/>
-    <button class="btn primary" style="width:100%;margin-top:8px" onclick="joinRoom()">Tham gia</button>
-  </div>
-</div>
+      <!-- LOBBY -->
+      <div id="lobby-view">
+        <div class="lobby-card">
+          <h2>🌙 Ma Sói Trực Tuyến</h2>
+          <p>Chơi cùng bạn bè theo thời gian thực qua Firebase. Tạo phòng hoặc
+            nhập mã để tham gia.</p>
+          <div class="sep"></div>
+          <div>
+            <div class="section-label">Tên của bạn</div>
+            <input class="inp" id="inp-name"
+              placeholder="Nhập tên người chơi..." maxlength="16" />
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" onclick="createRoom()">➕ Tạo
+              phòng</button>
+            <button class="btn" onclick="showJoinInput()">🔗 Vào phòng</button>
+          </div>
+          <div id="join-input-wrap" style="display:none">
+            <input class="inp" id="inp-room-id"
+              placeholder="Nhập mã phòng (5 ký tự)..." maxlength="5"
+              style="text-transform:uppercase" />
+            <button class="btn primary" style="width:100%;margin-top:8px"
+              onclick="joinRoom()">Tham gia</button>
+          </div>
+        </div>
 
-<!-- WAITING ROOM -->
-<div id="waiting-card" style="display:none" class="lobby-card">
-  <h2 id="room-title">Phòng ...</h2>
-  <div id="waiting-status" style="font-size:13px;color:var(--muted);text-align:center"></div>
-  <div>
-    <div class="section-label">Người chơi</div>
-    <div class="lobby-players" id="lobby-player-list"></div>
-  </div>
-  <div id="role-config-wrap" style="display:none">
-    <div class="section-label">Vai đặc biệt (host cấu hình)</div>
-    <div id="role-toggles"></div>
-  </div>
-  <div class="btn-row">
-    <button class="btn success" id="ready-btn" onclick="toggleReady()">✅ Ready</button>
-    <button class="btn primary" id="start-btn" onclick="startGame()" style="display:none">▶ Bắt đầu</button>
-  </div>
-  <div id="setup-msg" style="font-size:12px;color:var(--muted);text-align:center"></div>
-</div>
-</div>
-
-<!-- GAME VIEW -->
-<div id="game-view">
-  <div class="phase-bar">
-    <span class="phase-text" id="phase-text">–</span>
-    <span class="phase-info" id="phase-info"></span>
-    <div class="day-timer-wrap" id="day-timer-wrap" style="display:none">
-      <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-bar-fill" style="width:100%"></div></div>
-      <span class="day-timer-num ok" id="day-timer-num">2:00</span>
-    </div>
-    <span class="alive-count" id="alive-count"></span>
-  </div>
-  <div class="main">
-    <div class="sidebar">
-      <div>
-        <div class="section-label">Vai của bạn</div>
-        <div class="role-card">
-          <div class="role-name" id="my-role-name">–</div>
-          <div class="role-desc" id="my-role-desc"></div>
+        <!-- WAITING ROOM -->
+        <div id="waiting-card" style="display:none" class="lobby-card">
+          <h2 id="room-title">Phòng ...</h2>
+          <div id="waiting-status"
+            style="font-size:13px;color:var(--muted);text-align:center"></div>
+          <div>
+            <div class="section-label">Người chơi</div>
+            <div class="lobby-players" id="lobby-player-list"></div>
+          </div>
+          <div id="role-config-wrap" style="display:none">
+            <div class="section-label">Vai đặc biệt (host cấu hình)</div>
+            <div id="role-toggles"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn success" id="ready-btn" onclick="toggleReady()">✅
+              Ready</button>
+            <button class="btn primary" id="start-btn" onclick="startGame()"
+              style="display:none">▶ Bắt đầu</button>
+          </div>
+          <div id="setup-msg"
+            style="font-size:12px;color:var(--muted);text-align:center"></div>
         </div>
       </div>
-      <div style="flex:1;overflow-y:auto">
-        <div class="section-label">Người chơi</div>
-        <div class="player-list" id="player-list"></div>
-      </div>
-      <div id="night-log-section" style="display:none">
-        <div class="section-label">Nhật ký đêm</div>
-        <div id="night-log"></div>
-      </div>
-    </div>
-    <div class="content">
-      <div class="chat-area" id="chat-area"></div>
 
-      <!-- ── WOLF NIGHT CHAT ── -->
-      <div class="wolf-chat-section" id="wolf-chat-section">
-        <div class="wolf-chat-header" onclick="toggleWolfChat()">
-          🐺 Kênh riêng bầy sói
-          <span class="wolf-chat-badge" id="wolf-chat-badge">Đêm nay</span>
-          <span style="margin-left:auto;font-size:10px;color:#604040" id="wolf-chat-toggle-hint">▲ Thu gọn</span>
+      <!-- GAME VIEW -->
+      <div id="game-view">
+        <div class="phase-bar">
+          <span class="phase-text" id="phase-text">–</span>
+          <span class="phase-info" id="phase-info"></span>
+          <div class="day-timer-wrap" id="day-timer-wrap" style="display:none">
+            <div class="timer-bar-track"><div class="timer-bar-fill"
+                id="timer-bar-fill" style="width:100%"></div></div>
+            <span class="day-timer-num ok" id="day-timer-num">2:00</span>
+          </div>
+          <span class="alive-count" id="alive-count"></span>
         </div>
-        <div id="wolf-chat-body">
-          <div class="wolf-chat-area" id="wolf-chat-area"></div>
-          <div class="wolf-chat-input-bar">
-            <input class="inp" id="wolf-chat-msg" placeholder="Nhắn cho đồng bọn sói..." onkeydown="if(event.key==='Enter')sendWolfChat()"/>
-            <button class="btn wolf-btn" onclick="sendWolfChat()">Gửi</button>
+        <div class="main">
+          <div class="sidebar">
+            <div>
+              <div class="section-label">Vai của bạn</div>
+              <div class="role-card">
+                <div class="role-name" id="my-role-name">–</div>
+                <div class="role-desc" id="my-role-desc"></div>
+              </div>
+            </div>
+            <div style="flex:1;overflow-y:auto">
+              <div class="section-label">Người chơi</div>
+              <div class="player-list" id="player-list"></div>
+            </div>
+            <div id="night-log-section" style="display:none">
+              <div class="section-label">Nhật ký đêm</div>
+              <div id="night-log"></div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="chat-area" id="chat-area"></div>
+
+            <!-- ── WOLF NIGHT CHAT ── -->
+            <div class="wolf-chat-section" id="wolf-chat-section">
+              <div class="wolf-chat-header" onclick="toggleWolfChat()">
+                🐺 Kênh riêng bầy sói
+                <span class="wolf-chat-badge" id="wolf-chat-badge">Đêm
+                  nay</span>
+                <span style="margin-left:auto;font-size:10px;color:#604040"
+                  id="wolf-chat-toggle-hint">▲ Thu gọn</span>
+              </div>
+              <div id="wolf-chat-body">
+                <div class="wolf-chat-area" id="wolf-chat-area"></div>
+                <div class="wolf-chat-input-bar">
+                  <input class="inp" id="wolf-chat-msg"
+                    placeholder="Nhắn cho đồng bọn sói..."
+                    onkeydown="if(event.key==='Enter')sendWolfChat()" />
+                  <button class="btn wolf-btn"
+                    onclick="sendWolfChat()">Gửi</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-input-bar">
+              <input class="inp" id="chat-msg" placeholder="Nhập tin nhắn..."
+                onkeydown="if(event.key==='Enter')sendChat()" />
+              <button class="btn primary" onclick="sendChat()">Gửi</button>
+            </div>
+
+            <!-- ── VOTE STATS PANEL ── -->
+            <div class="vote-stats-panel" id="vote-stats-panel">
+              <div class="vote-stats-title">
+                🗳️ Bảng bỏ phiếu
+                <span class="vote-count-badge" id="vote-total-badge">0
+                  phiếu</span>
+                <span id="vote-majority-hint"
+                  style="font-size:10px;color:var(--muted);margin-left:auto"></span>
+              </div>
+              <div class="vote-rows" id="vote-rows"></div>
+            </div>
+
+            <div class="actions-area">
+              <div class="section-label" id="actions-label">Hành động</div>
+              <div class="action-grid" id="action-btns"></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="chat-input-bar">
-        <input class="inp" id="chat-msg" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter')sendChat()"/>
-        <button class="btn primary" onclick="sendChat()">Gửi</button>
+      <!-- COUNTDOWN OVERLAY -->
+      <div class="countdown-overlay" id="countdown-overlay">
+        <div class="countdown-num" id="countdown-num">5</div>
+        <div class="countdown-label">Ván chơi bắt đầu...</div>
       </div>
 
-      <!-- ── VOTE STATS PANEL ── -->
-      <div class="vote-stats-panel" id="vote-stats-panel">
-        <div class="vote-stats-title">
-          🗳️ Bảng bỏ phiếu
-          <span class="vote-count-badge" id="vote-total-badge">0 phiếu</span>
-          <span id="vote-majority-hint" style="font-size:10px;color:var(--muted);margin-left:auto"></span>
+      <!-- WIN OVERLAY -->
+      <div class="win-overlay" id="win-overlay">
+        <div class="win-card">
+          <div class="win-title" id="win-title">–</div>
+          <div class="win-sub" id="win-sub"></div>
+          <div id="win-roles"
+            style="margin-bottom:20px;max-height:240px;overflow-y:auto"></div>
+          <button class="btn primary" style="width:100%;padding:11px"
+            onclick="resetGame()">🔄 Chơi lại</button>
         </div>
-        <div class="vote-rows" id="vote-rows"></div>
       </div>
 
-      <div class="actions-area">
-        <div class="section-label" id="actions-label">Hành động</div>
-        <div class="action-grid" id="action-btns"></div>
-      </div>
-    </div>
-  </div>
-</div>
+      <!-- TOAST -->
+      <div class="toast-wrap" id="toast-wrap"></div>
 
-<!-- COUNTDOWN OVERLAY -->
-<div class="countdown-overlay" id="countdown-overlay">
-  <div class="countdown-num" id="countdown-num">5</div>
-  <div class="countdown-label">Ván chơi bắt đầu...</div>
-</div>
+    </div><!-- wrapper -->
 
-<!-- WIN OVERLAY -->
-<div class="win-overlay" id="win-overlay">
-  <div class="win-card">
-    <div class="win-title" id="win-title">–</div>
-    <div class="win-sub" id="win-sub"></div>
-    <div id="win-roles" style="margin-bottom:20px;max-height:240px;overflow-y:auto"></div>
-    <button class="btn primary" style="width:100%;padding:11px" onclick="resetGame()">🔄 Chơi lại</button>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div class="toast-wrap" id="toast-wrap"></div>
-
-</div><!-- wrapper -->
-
-<script type="module">
+    <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -702,65 +726,99 @@ async function processNightAsHost(d){
 }
 
 // ── HOST: RESOLVE NIGHT ──
-// KEY CHANGE: halfwolf conversion is silent — no public message, no nightLog entry
+// ── HOST: RESOLVE NIGHT ──
 async function resolveNight(d){
-  const updates = { phase:'day', _resolvingNight:false, nightActions:{}, guardTarget:null };
-  let nightLog = [...(d.nightLog||[])];
+  const updates = { 
+    phase: 'day', 
+    _resolvingNight: false, 
+    nightActions: {}, 
+    guardTarget: null 
+  };
+
+  let nightLog = [...(d.nightLog || [])];
   let alive = [...d.alive];
-  let messages = [...(d.messages||[])];
-  const addMsg = t => messages.push({system:true,text:t,important:true,ts:Date.now()});
+  let messages = [...(d.messages || [])];
 
-  let killed = d.nightKill;
-  let halfwolfConverted = false; // track silently
+  const addMsg = (text, important = true) => {
+    messages.push({
+      system: true,
+      text: text,
+      important: important,
+      ts: Date.now()
+    });
+  };
 
-  if(killed){
-    if(killed === d.guardTarget){
-      // Guard saved — public message OK (guard acted, someone was saved, target unknown)
+  let nightKill = d.nightKill;        // Người sói chọn cắn
+  let wasProtected = false;
+
+  // ==================== XỬ LÝ BẢO VỆ + SÓI CẮN ====================
+  if (nightKill) {
+    if (nightKill === d.guardTarget) {
+      // Bảo vệ cứu thành công → GIẤU TÊN NGƯỜI ĐƯỢC CỨU
       addMsg('🛡️ Bảo vệ đã cứu người bị sói nhắm!');
-      nightLog.push('🛡️ Người được bảo vệ thoát chết');
-      killed = null;
-    } else if(d.roles[killed] === 'halfwolf'){
-      // SILENT conversion — no public message, no nightLog, target stays alive
-      // Only update roles silently
-      const newRoles = {...d.roles, [killed]:'wolf'};
+      nightLog.push('🛡️ Bảo vệ đã cứu một người');
+      wasProtected = true;
+      nightKill = null;               // Không chết
+    } 
+    else if (d.roles[nightKill] === 'halfwolf') {
+      // Nửa Sói bị cắn → chuyển thành Sói (im lặng)
+      const newRoles = { ...d.roles, [nightKill]: 'wolf' };
       updates.roles = newRoles;
-      // Add private note only visible to host in nightLog (hidden from chat)
-      // We do NOT push to messages or nightLog — fully silent to all players
-      halfwolfConverted = true;
-      killed = null; // halfwolf does not die
-    } else {
-      nightLog.push('💀 Sói giết ' + killed);
-      addMsg('☠️ ' + killed + ' đã chết trong đêm.');
-      alive = alive.filter(p=>p!==killed);
-      alive = applyLoverDeath(killed, alive, d, nightLog, messages, addMsg);
+      nightKill = null;
+    } 
+    else {
+      // Sói giết thành công
+      nightLog.push(`💀 Sói giết ${nightKill}`);
+      addMsg(`☠️ ${nightKill} đã chết trong đêm.`);
+      alive = alive.filter(p => p !== nightKill);
+      alive = applyLoverDeath(nightKill, alive, d, nightLog, messages, addMsg);
     }
   }
 
-  const wkill = d.nightActions?.witch_kill;
-  if(wkill && alive.includes(wkill)){
-    nightLog.push('☠️ Phù thủy đầu độc ' + wkill);
-    addMsg('☠️ ' + wkill + ' bị phù thủy đầu độc!');
-    alive = alive.filter(p=>p!==wkill);
-    alive = applyLoverDeath(wkill, alive, d, nightLog, messages, addMsg);
+  // ==================== XỬ LÝ PHÙ THỦY ĐỘC ====================
+  const witchKill = d.nightActions?.witch_kill;
+  if (witchKill && alive.includes(witchKill)) {
+    nightLog.push(`☠️ Phù thủy đầu độc ${witchKill}`);
+    addMsg(`☠️ ${witchKill} bị phù thủy đầu độc!`);
+    alive = alive.filter(p => p !== witchKill);
+    alive = applyLoverDeath(witchKill, alive, d, nightLog, messages, addMsg);
   }
 
-  if(messages.length > 120) messages.splice(0, messages.length-120);
-  const dead = d.players.filter(p=>!alive.includes(p));
-
-  // "No one died" message — show if nobody was killed AND no halfwolf quietly converted
-  if(!killed && !wkill && !halfwolfConverted){
-    addMsg('☀️ Không ai chết đêm qua.');
-  } else if(!killed && !wkill && halfwolfConverted){
-    // halfwolf converted silently, show generic "no one died" so villagers don't suspect
-    addMsg('☀️ Không ai chết đêm qua.');
+  // ==================== CẬP NHẬT lastGuardTarget ====================
+  // Quan trọng: Lưu người được bảo vệ đêm nay để đêm sau không cho bảo vệ lại
+  if (d.guardTarget) {
+    updates.lastGuardTarget = d.guardTarget || null;
   }
 
-  addMsg(`☀️ Bình minh! Thảo luận ${DAY_DURATION_SEC / 60} phút rồi bỏ phiếu! (Cần >50% số phiếu để treo cổ)`);
+  // ==================== THÔNG BÁO KHÔNG AI CHẾT ====================
+  if (!nightKill && !witchKill) {
+    addMsg('☀️ Không ai chết đêm qua.', wasProtected ? true : false);
+  }
 
-  Object.assign(updates, { alive, dead, nightKill:null, nightLog, messages, votes:{}, host: d.host, dayStartTs: Date.now() });
+  // Giới hạn tin nhắn
+  if (messages.length > 120) {
+    messages = messages.slice(-120);
+  }
 
-  const win = calcWin(alive, updates.roles || d.roles, d.enchanted||[]);
-  if(win) updates.winState = win;
+  const dead = d.players.filter(p => !alive.includes(p));
+
+  // Cập nhật dữ liệu
+  Object.assign(updates, {
+    alive,
+    dead,
+    nightKill: null,
+    nightLog,
+    messages,
+    votes: {},
+    dayStartTs: Date.now()
+  });
+
+  // Kiểm tra điều kiện thắng
+  const win = calcWin(alive, updates.roles || d.roles, d.enchanted || []);
+  if (win) {
+    updates.winState = win;
+  }
+
   await updateDoc(ref(), updates);
 }
 
@@ -856,87 +914,134 @@ function stopDayTimerDisplay(){
 
 window.resolveVote = async (overrideD) => {
   const data = overrideD || D;
-  if(!data || data.host !== myName) return;
-  const votes = data.votes || {};
-  const counts = {};
-  Object.values(votes).forEach(v => counts[v]=(counts[v]||0)+1);
-  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if (!data || data.host !== myName) return;
 
-  let messages = [...(data.messages||[])];
-  const addMsg = t => messages.push({system:true,text:t,important:true,ts:Date.now()});
+  const votes = data.votes || {};
+  const counts = {};        // đếm phiếu treo người
+  let skipCount = 0;        // đếm số người chọn "Không treo ai"
+
+  // Phân loại phiếu
+  Object.entries(votes).forEach(([voter, target]) => {
+    if (target === "skip" || target === "none" || target === null) {
+      skipCount++;
+    } else {
+      counts[target] = (counts[target] || 0) + 1;
+    }
+  });
+
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+  let messages = [...(data.messages || [])];
+  const addMsg = t => messages.push({ system: true, text: t, important: true, ts: Date.now() });
+
   let alive = [...data.alive];
-  let nightLog = [...(data.nightLog||[])];
+  let nightLog = [...(data.nightLog || [])];
   let winState = null;
 
   const aliveCount = data.alive.length;
   const majorityThreshold = Math.floor(aliveCount / 2) + 1;
+  const totalVotes = Object.keys(votes).length;
 
   const topEntry = sorted[0];
   const hasMajority = topEntry && topEntry[1] >= majorityThreshold;
-  const isTie = sorted.length >= 2 && sorted[1][1] === sorted[0][1];
+  const isTie = sorted.length >= 2 && sorted[0][1] === sorted[1][1];
 
-  if(!hasMajority || isTie){
-    if(sorted.length === 0){
+  // === XỬ LÝ KẾT QUẢ BỎ PHIẾU ===
+  if (!hasMajority || isTie) {
+    if (totalVotes === 0) {
       addMsg('⚖️ Không ai bỏ phiếu. Không ai bị treo cổ hôm nay.');
-    } else if(isTie){
+    } 
+    else if (skipCount > 0 && (skipCount >= majorityThreshold || !topEntry)) {
+      // Nhiều người chọn skip → coi như không treo ai
+      addMsg(`⚖️ Đa số chọn không treo ai (${skipCount} phiếu). Không ai bị treo cổ hôm nay.`);
+    } 
+    else if (isTie) {
       addMsg(`⚖️ Hoà phiếu! Không ai đạt đa số tuyệt đối (cần ≥${majorityThreshold}/${aliveCount} phiếu). Không ai bị treo cổ.`);
-    } else {
+    } 
+    else {
       addMsg(`⚖️ Không ai đạt đa số tuyệt đối (cần ≥${majorityThreshold}/${aliveCount} phiếu). Không ai bị treo cổ.`);
     }
-  } else {
+  } 
+  else {
+    // Có người đạt đa số → treo cổ
     const [top, topCount] = topEntry;
-    addMsg(`☠️ ${top} bị treo cổ! (${topCount}/${aliveCount} phiếu — vượt ngưỡng ${majorityThreshold} cần thiết)`);
+    addMsg(`☠️ ${top} bị treo cổ! (${topCount}/${aliveCount} phiếu — vượt ngưỡng ${majorityThreshold})`);
+    
     nightLog.push('🪢 ' + top + ' bị treo cổ');
-    alive = alive.filter(p=>p!==top);
+    alive = alive.filter(p => p !== top);
     alive = applyLoverDeath(top, alive, data, nightLog, messages, addMsg);
-    if(data.roles[top] === 'hunter'){
-      const shootTarget = alive[Math.floor(Math.random()*alive.length)];
-      if(shootTarget){
+
+    if (data.roles[top] === 'hunter') {
+      const shootTarget = alive[Math.floor(Math.random() * alive.length)];
+      if (shootTarget) {
         addMsg('🏹 Thợ săn bắn ' + shootTarget + ' trước khi chết!');
-        alive = alive.filter(p=>p!==shootTarget);
+        alive = alive.filter(p => p !== shootTarget);
         alive = applyLoverDeath(shootTarget, alive, data, nightLog, messages, addMsg);
       }
     }
-    winState = calcWin(alive, data.roles, data.enchanted||[]);
+    winState = calcWin(alive, data.roles, data.enchanted || []);
   }
 
-  if(messages.length > 120) messages.splice(0, messages.length-120);
-  const dead = data.players.filter(p=>!alive.includes(p));
+  // ====================== Cập nhật dữ liệu ======================
+  if (messages.length > 120) messages = messages.slice(-120);
+
+  const dead = data.players.filter(p => !alive.includes(p));
   const nextNight = data.night + 1;
-  const nextQueue = buildNightQueue({roles:data.roles, alive, night:nextNight, selectedRoles:data.selectedRoles||{}, cupidDone:data.cupidDone});
+  const nextQueue = buildNightQueue({
+    roles: data.roles,
+    alive,
+    night: nextNight,
+    selectedRoles: data.selectedRoles || {},
+    cupidDone: data.cupidDone
+  });
 
   const updates = {
-    alive, dead, votes:{}, nightLog, messages, _voteResolved:false,
-    host: data.host,
+    alive,
+    dead,
+    votes: {},                    // reset phiếu
+    nightLog,
+    messages,
+    _voteResolved: false,
     dayStartTs: null,
     phase: winState ? 'end' : 'night',
     night: winState ? data.night : nextNight,
-    nightQueue: nextQueue, nightStep:0,
-    nightActions:{}, nightKill:null,
-    guardTarget:null, lastGuardTarget:data.guardTarget||null,
+    nightQueue: nextQueue,
+    nightStep: 0,
+    nightActions: {},
+    nightKill: null,
+    guardTarget: null,
+    lastGuardTarget: data.lastGuardTarget || null,
   };
-  if(winState) updates.winState = winState;
-  else {
-    messages.push({system:true,text:`🌙 Đêm ${nextNight} bắt đầu...`,important:false,ts:Date.now()});
+
+  if (winState) {
+    updates.winState = winState;
+  } else {
+    messages.push({
+      system: true,
+      text: `🌙 Đêm ${nextNight} bắt đầu...`,
+      important: false,
+      ts: Date.now()
+    });
     updates.messages = messages;
   }
+
   await updateDoc(ref(), updates);
 };
 
 window.skipVote = async () => {
-  if(!D) return;
-  let messages = [...(D.messages||[])];
-  messages.push({system:true,text:'Dân làng quyết định không treo cổ ai.',important:false,ts:Date.now()});
-  const nextNight = D.night + 1;
-  const nextQueue = buildNightQueue({roles:D.roles, alive:D.alive, night:nextNight, selectedRoles:D.selectedRoles||{}, cupidDone:D.cupidDone});
-  await updateDoc(ref(), {
-    votes:{}, phase:'night', night:nextNight,
-    nightQueue:nextQueue, nightStep:0,
-    nightActions:{}, nightKill:null,
-    guardTarget:null, lastGuardTarget:D.guardTarget||null,
-    host: D.host,
-    dayStartTs: null, messages
-  });
+  if (!D) return;
+  if (!D.alive.includes(myName)) {
+    toast('Bạn đã chết, không thể bỏ phiếu.');
+    return;
+  }
+
+  // Ghi nhận người này muốn skip (không treo ai)
+  const votes = { ...(D.votes || {}) };
+  votes[myName] = "skip";        // hoặc "noone", "none" đều được
+
+  await updateDoc(ref(), { votes });
+
+  toast('🗳️ Bạn chọn: Không treo ai');
 };
 
 // ── WIN CHECK ──
@@ -966,7 +1071,11 @@ window.nightAction = async (action, target) => {
 
   switch(action){
     case 'wolf_kill':   updates.nightKill = target; addSys('🐺 Sói đã chọn mục tiêu...'); break;
-    case 'guard':       updates.guardTarget = target; updates.lastGuardTarget = d.guardTarget||null; addSys('🛡️ Bảo vệ đã chọn người cần che chắn.'); break;
+        case 'guard':       
+      updates.guardTarget = target; 
+      // Không cập nhật lastGuardTarget ở đây nữa (sẽ cập nhật sau khi đêm kết thúc)
+      addSys(`🛡️ Bảo vệ đã chọn bảo vệ ${target}.`);
+      break;
     case 'seer':{
       if (!target) { toast('🔮 Chọn người muốn soi', 2000); return; }
       const role = d.roles[target];
@@ -1238,7 +1347,27 @@ function renderActions(d, myRole, isAlive){
 
     if(curRole==='wolf')        others.filter(p=>!isWolfAligned(d.roles, p)).forEach(p=>{ el.innerHTML+=`<button class="btn wolf-btn" onclick="nightAction('wolf_kill','${p}')">🐺 Giết ${p}</button>`; });
     if(curRole==='seer')        others.forEach(p=>{ el.innerHTML+=`<button class="btn seer-btn" onclick="nightAction('seer','${p}')">🔮 Soi ${p}</button>`; });
-    if(curRole==='guard')       d.alive.filter(p=>p!==d.lastGuardTarget).forEach(p=>{ el.innerHTML+=`<button class="btn guard-btn" onclick="nightAction('guard','${p}')">🛡️ Bảo vệ ${p}</button>`; });
+        if(curRole==='guard') {
+      const lastProtected = d.lastGuardTarget;   // Người được bảo vệ đêm trước
+
+      label.textContent = `🌙 Lượt của bạn — Bảo vệ (không được bảo vệ lại người đêm trước)`;
+
+      const canProtectList = d.alive.filter(p => 
+        p !== myName &&                    // Không tự bảo vệ
+        p !== lastProtected                // Không bảo vệ lại người đêm trước
+      );
+
+      if (canProtectList.length === 0) {
+        el.innerHTML += `<button class="btn" onclick="nightAction('skip',null)">⏭️ Bỏ qua lượt</button>`;
+      } else {
+        canProtectList.forEach(p => {
+          el.innerHTML += `
+            <button class="btn guard-btn" onclick="nightAction('guard','${p}')">
+              🛡️ Bảo vệ ${p}
+            </button>`;
+        });
+      }
+    }
     if(curRole==='witch'){
       if(!d.witchSaveUsed && d.nightKill) el.innerHTML+=`<button class="btn witch-btn" onclick="nightAction('witch_save',null)">🧪 Cứu ${d.nightKill}</button>`;
       if(!d.witchKillUsed) others.forEach(p=>{ el.innerHTML+=`<button class="btn danger" onclick="nightAction('witch_kill','${p}')">☠️ Độc ${p}</button>`; });
@@ -1309,5 +1438,5 @@ document.getElementById('inp-name').addEventListener('keydown', e => {
   if(e.key==='Enter') document.getElementById('inp-room-id')?.focus() || createRoom();
 });
 </script>
-</body>
+  </body>
 </html>
