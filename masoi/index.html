@@ -82,16 +82,9 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
 .phase-info{font-size:12px;color:var(--muted)}
 .alive-count{margin-left:auto;font-size:12px;color:var(--muted)}
 
-/* ── DAY COUNTDOWN BAR (in phase-bar) ── */
+/* ── DAY COUNTDOWN BAR ── */
 .day-timer-wrap{display:flex;align-items:center;gap:8px;margin-left:12px}
-.day-timer-num{
-  font-family:'Cinzel',serif;
-  font-size:18px;
-  font-weight:700;
-  min-width:36px;
-  text-align:center;
-  transition:color .3s;
-}
+.day-timer-num{font-family:'Cinzel',serif;font-size:18px;font-weight:700;min-width:36px;text-align:center;transition:color .3s}
 .day-timer-num.urgent{color:#f87171;text-shadow:0 0 12px #f8717160;animation:timerPulse .6s ease-in-out infinite}
 .day-timer-num.warning{color:#fbbf24}
 .day-timer-num.ok{color:#6ee7b7}
@@ -128,6 +121,40 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
 .dot.thief{background:#78909c}
 .player-role-tag{margin-left:auto;font-size:10px;color:var(--muted)}
 
+/* ── WOLF NIGHT CHAT ── */
+.wolf-chat-section{
+  border-top:1px solid #3a0f0f;
+  background:rgba(30,8,8,.7);
+  display:none;
+  flex-direction:column;
+}
+.wolf-chat-section.visible{display:flex}
+.wolf-chat-header{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;
+  background:rgba(40,10,10,.8);
+  border-bottom:1px solid #3a0f0f;
+  font-size:10px;color:#f08080;
+  font-family:'Cinzel',serif;letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;user-select:none;
+}
+.wolf-chat-header .wolf-chat-badge{
+  background:#2a0a0a;border:1px solid var(--wolf);
+  border-radius:10px;padding:1px 8px;font-size:10px;color:var(--wolf);
+}
+.wolf-chat-area{
+  max-height:120px;overflow-y:auto;
+  padding:8px 14px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.wolf-msg{padding:5px 10px;border-radius:6px;font-size:12.5px;line-height:1.4}
+.wolf-msg.me{background:#2a0a0a;color:#f08080;align-self:flex-end;border:1px solid #4a1515}
+.wolf-msg.other{background:#1a0808;align-self:flex-start;border:1px solid #2a1010;color:#e0a0a0}
+.wolf-msg-name{font-size:9px;opacity:.6;margin-bottom:2px;font-family:'Cinzel',serif}
+.wolf-chat-input-bar{display:flex;gap:6px;padding:6px 10px;border-top:1px solid #2a0f0f}
+.wolf-chat-input-bar input{flex:1;font-size:12px;padding:6px 10px;background:#150505;border-color:#2a1010}
+.wolf-chat-input-bar .btn{font-size:12px;padding:6px 12px;border-color:var(--wolf);color:#f08080}
+
 /* CHAT */
 .chat-area{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:5px;min-height:200px}
 .msg{padding:7px 13px;border-radius:8px;font-size:13.5px;max-width:90%;line-height:1.45}
@@ -140,23 +167,10 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
 .chat-input-bar input{flex:1}
 
 /* ── VOTE STATS PANEL ── */
-.vote-stats-panel{
-  padding:10px 14px;
-  border-top:1px solid var(--border);
-  background:rgba(6,10,18,.9);
-  display:none;
-}
+.vote-stats-panel{padding:10px 14px;border-top:1px solid var(--border);background:rgba(6,10,18,.9);display:none}
 .vote-stats-panel.visible{display:block}
-.vote-stats-title{
-  font-size:10px;color:var(--muted);font-family:'Cinzel',serif;
-  letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;
-  display:flex;align-items:center;gap:8px;
-}
-.vote-stats-title .vote-count-badge{
-  background:#1a2a4a;border:1px solid var(--border);
-  border-radius:10px;padding:1px 8px;color:var(--accent);
-  font-size:10px;
-}
+.vote-stats-title{font-size:10px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.vote-stats-title .vote-count-badge{background:#1a2a4a;border:1px solid var(--border);border-radius:10px;padding:1px 8px;color:var(--accent);font-size:10px}
 .vote-rows{display:flex;flex-direction:column;gap:5px}
 .vote-row{display:flex;align-items:center;gap:8px;font-size:13px}
 .vote-row-name{width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
@@ -166,7 +180,6 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
 .vote-row-voters{font-size:10px;color:#3a5070;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
 .vote-row.top-voted .vote-row-name{color:#f08080;font-weight:600}
 .vote-row.top-voted .vote-row-bar-fill{background:linear-gradient(90deg,#7c1d1d,#ef4444);box-shadow:0 0 6px #ef444440}
-/* Highlight when target has >50% */
 .vote-row.majority .vote-row-name{color:#ef4444;font-weight:700}
 .vote-row.majority .vote-row-bar-fill{background:linear-gradient(90deg,#7f1d1d,#dc2626);box-shadow:0 0 10px #dc262660}
 
@@ -224,17 +237,14 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
   <h2>🌙 Ma Sói Trực Tuyến</h2>
   <p>Chơi cùng bạn bè theo thời gian thực qua Firebase. Tạo phòng hoặc nhập mã để tham gia.</p>
   <div class="sep"></div>
-
   <div>
     <div class="section-label">Tên của bạn</div>
     <input class="inp" id="inp-name" placeholder="Nhập tên người chơi..." maxlength="16"/>
   </div>
-
   <div class="btn-row">
     <button class="btn primary" onclick="createRoom()">➕ Tạo phòng</button>
     <button class="btn" onclick="showJoinInput()">🔗 Vào phòng</button>
   </div>
-
   <div id="join-input-wrap" style="display:none">
     <input class="inp" id="inp-room-id" placeholder="Nhập mã phòng (5 ký tự)..." maxlength="5" style="text-transform:uppercase"/>
     <button class="btn primary" style="width:100%;margin-top:8px" onclick="joinRoom()">Tham gia</button>
@@ -245,17 +255,14 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
 <div id="waiting-card" style="display:none" class="lobby-card">
   <h2 id="room-title">Phòng ...</h2>
   <div id="waiting-status" style="font-size:13px;color:var(--muted);text-align:center"></div>
-
   <div>
     <div class="section-label">Người chơi</div>
     <div class="lobby-players" id="lobby-player-list"></div>
   </div>
-
   <div id="role-config-wrap" style="display:none">
     <div class="section-label">Vai đặc biệt (host cấu hình)</div>
     <div id="role-toggles"></div>
   </div>
-
   <div class="btn-row">
     <button class="btn success" id="ready-btn" onclick="toggleReady()">✅ Ready</button>
     <button class="btn primary" id="start-btn" onclick="startGame()" style="display:none">▶ Bắt đầu</button>
@@ -269,7 +276,6 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
   <div class="phase-bar">
     <span class="phase-text" id="phase-text">–</span>
     <span class="phase-info" id="phase-info"></span>
-    <!-- Day countdown in phase bar -->
     <div class="day-timer-wrap" id="day-timer-wrap" style="display:none">
       <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-bar-fill" style="width:100%"></div></div>
       <span class="day-timer-num ok" id="day-timer-num">2:00</span>
@@ -296,6 +302,23 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
     </div>
     <div class="content">
       <div class="chat-area" id="chat-area"></div>
+
+      <!-- ── WOLF NIGHT CHAT ── -->
+      <div class="wolf-chat-section" id="wolf-chat-section">
+        <div class="wolf-chat-header" onclick="toggleWolfChat()">
+          🐺 Kênh riêng bầy sói
+          <span class="wolf-chat-badge" id="wolf-chat-badge">Đêm nay</span>
+          <span style="margin-left:auto;font-size:10px;color:#604040" id="wolf-chat-toggle-hint">▲ Thu gọn</span>
+        </div>
+        <div id="wolf-chat-body">
+          <div class="wolf-chat-area" id="wolf-chat-area"></div>
+          <div class="wolf-chat-input-bar">
+            <input class="inp" id="wolf-chat-msg" placeholder="Nhắn cho đồng bọn sói..." onkeydown="if(event.key==='Enter')sendWolfChat()"/>
+            <button class="btn wolf-btn" onclick="sendWolfChat()">Gửi</button>
+          </div>
+        </div>
+      </div>
+
       <div class="chat-input-bar">
         <input class="inp" id="chat-msg" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter')sendChat()"/>
         <button class="btn primary" onclick="sendChat()">Gửi</button>
@@ -357,8 +380,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-// ── CONSTANTS ──
-// [CHANGED] Thời gian thảo luận ban ngày: 120 giây (2 phút)
 const DAY_DURATION_SEC = 120;
 
 // ── ROLES DATA ──
@@ -371,7 +392,7 @@ const ROLES = {
   cupid:     { name:'Thần tình yêu',   team:'village', desc:'Đêm đầu ghép 2 người yêu. Nếu 1 chết người kia cũng chết.', color:'cupid'  },
   wolf:      { name:'Ma sói',          team:'wolf',    desc:'Ban đêm cùng phe chọn giết 1 người dân.',                  color:'wolf'      },
   whitewolf: { name:'Sói trắng',       team:'wolf3',   desc:'Thức cùng sói. Cứ 2 đêm giết 1 sói thường. Thắng khi là sói duy nhất.', color:'whitewolf' },
-  halfwolf:  { name:'Nửa sói',         team:'village', desc:'Nếu bị sói cắn thì không chết mà trở thành sói.',          color:'halfwolf'  },
+  halfwolf:  { name:'Nửa sói',         team:'village', desc:'Nếu bị sói cắn thì không chết, âm thầm trở thành sói mà không ai biết.', color:'halfwolf'  },
   flutist:   { name:'Thổi sáo',        team:'flutist', desc:'Mỗi đêm thôi miên 2 người. Thắng khi tất cả bị thôi miên.', color:'flutist'  },
   thief:     { name:'Ăn trộm',         team:'?',       desc:'Đêm đầu chọn 1 trong 2 lá bài ẩn làm vai của mình.',       color:'thief'     }
 };
@@ -387,10 +408,9 @@ let lastPhase = '';
 let lastNight = 0;
 let selectedRoles = { seer:true, guard:false, witch:false, hunter:false, cupid:false, whitewolf:false, halfwolf:false, flutist:false, thief:false };
 let D = null;
+let _wolfChatCollapsed = false;
 
-// ── Day timer (local tick) ──
 let _dayTimerInterval = null;
-// Track last countdown message seconds to avoid spam
 let _lastCountdownMsg = -1;
 
 // ── UTILS ──
@@ -409,12 +429,24 @@ function toast(txt, duration=3000){
 
 function countWolves(n, wolvesCount){ return wolvesCount || 1; }
 
-// Format seconds as M:SS
 function formatTime(seconds){
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2,'0')}`;
 }
+
+// Check if a player is wolf-aligned (wolf or whitewolf, including converted halfwolf)
+function isWolfAligned(roles, p){
+  return roles[p] === 'wolf' || roles[p] === 'whitewolf';
+}
+
+// ── WOLF CHAT TOGGLE ──
+window.toggleWolfChat = () => {
+  _wolfChatCollapsed = !_wolfChatCollapsed;
+  document.getElementById('wolf-chat-body').style.display = _wolfChatCollapsed ? 'none' : 'flex';
+  document.getElementById('wolf-chat-body').style.flexDirection = _wolfChatCollapsed ? '' : 'column';
+  document.getElementById('wolf-chat-toggle-hint').textContent = _wolfChatCollapsed ? '▼ Mở rộng' : '▲ Thu gọn';
+};
 
 // ── LOBBY ──
 window.showJoinInput = () => {
@@ -467,6 +499,8 @@ function emptyRoomState(id, host){
     selectedRoles: { seer:true, guard:false, witch:false, hunter:false, cupid:false, whitewolf:false, halfwolf:false, flutist:false, thief:false },
     wolvesCount: 1,
     ready: {}, countdown: null, dayStartTs: null, winState: null,
+    // Wolf private chat
+    wolfMessages: [],
   };
 }
 
@@ -517,13 +551,11 @@ async function handleSnapshot(d){
       else if(d.phase === 'day' && lastPhase === 'night') toast('☀️ Bình minh ló dạng');
       lastPhase = d.phase;
       lastNight = d.night;
-      // Reset countdown chat msg tracker on phase change
       _lastCountdownMsg = -1;
     }
 
     if(d.winState) showWin(d.winState, d);
 
-    // Start local day timer display
     if(d.phase === 'day' && d.dayStartTs){
       startDayTimerDisplay(d);
     } else {
@@ -634,7 +666,6 @@ async function doAssignRoles(d){
   let thiefOptions = [];
   if(Object.values(roles).includes('thief')) thiefOptions = ['villager','villager'];
   const queue = buildNightQueue({ roles, alive:[...d.players], night:1, selectedRoles:d.selectedRoles||{}, cupidDone:false });
-  // [CHANGED] Host không thay đổi - giữ nguyên d.host
   await updateDoc(ref(), {
     roles, alive:[...d.players], dead:[],
     phase:'night', night:1,
@@ -645,7 +676,7 @@ async function doAssignRoles(d){
     witchSaveUsed:false, witchKillUsed:false,
     loverPairs:[], enchanted:[], nightLog:[],
     votes:{}, countdown:null, winState:null,
-    // host remains unchanged (d.host)
+    wolfMessages: [],
     messages:[{system:true,text:'🌙 Đêm 1 bắt đầu. Làng chìm vào giấc ngủ...',important:false,ts:Date.now()}]
   });
 }
@@ -660,13 +691,6 @@ function buildNightQueue(d){
   });
 }
 
-// [CHANGED] Host không tự động chuyển khi bị giết - giữ nguyên host cũ
-// Host cũ vẫn điều khiển game dù đã chết (spectator host)
-function pickNewHost(alive, currentHost, allPlayers){
-  // Giữ nguyên host dù alive hay dead
-  return currentHost;
-}
-
 async function processNightAsHost(d){
   const step = d.nightStep;
   const queue = d.nightQueue || [];
@@ -678,6 +702,7 @@ async function processNightAsHost(d){
 }
 
 // ── HOST: RESOLVE NIGHT ──
+// KEY CHANGE: halfwolf conversion is silent — no public message, no nightLog entry
 async function resolveNight(d){
   const updates = { phase:'day', _resolvingNight:false, nightActions:{}, guardTarget:null };
   let nightLog = [...(d.nightLog||[])];
@@ -686,18 +711,23 @@ async function resolveNight(d){
   const addMsg = t => messages.push({system:true,text:t,important:true,ts:Date.now()});
 
   let killed = d.nightKill;
+  let halfwolfConverted = false; // track silently
+
   if(killed){
     if(killed === d.guardTarget){
+      // Guard saved — public message OK (guard acted, someone was saved, target unknown)
       addMsg('🛡️ Bảo vệ đã cứu người bị sói nhắm!');
-      nightLog.push('🛡️ ' + killed + ' được bảo vệ');
+      nightLog.push('🛡️ Người được bảo vệ thoát chết');
       killed = null;
     } else if(d.roles[killed] === 'halfwolf'){
+      // SILENT conversion — no public message, no nightLog, target stays alive
+      // Only update roles silently
       const newRoles = {...d.roles, [killed]:'wolf'};
-      addMsg('🐺 ' + killed + ' bị cắn và trở thành sói!');
-      nightLog.push('🐺 ' + killed + ' thành sói');
       updates.roles = newRoles;
-      alive = alive.filter(p=>p!==killed);
-      killed = null;
+      // Add private note only visible to host in nightLog (hidden from chat)
+      // We do NOT push to messages or nightLog — fully silent to all players
+      halfwolfConverted = true;
+      killed = null; // halfwolf does not die
     } else {
       nightLog.push('💀 Sói giết ' + killed);
       addMsg('☠️ ' + killed + ' đã chết trong đêm.');
@@ -717,14 +747,19 @@ async function resolveNight(d){
   if(messages.length > 120) messages.splice(0, messages.length-120);
   const dead = d.players.filter(p=>!alive.includes(p));
 
-  if(!killed && !wkill) addMsg('☀️ Không ai chết đêm qua.');
-  // [CHANGED] Thông báo 2 phút thảo luận
+  // "No one died" message — show if nobody was killed AND no halfwolf quietly converted
+  if(!killed && !wkill && !halfwolfConverted){
+    addMsg('☀️ Không ai chết đêm qua.');
+  } else if(!killed && !wkill && halfwolfConverted){
+    // halfwolf converted silently, show generic "no one died" so villagers don't suspect
+    addMsg('☀️ Không ai chết đêm qua.');
+  }
+
   addMsg(`☀️ Bình minh! Thảo luận ${DAY_DURATION_SEC / 60} phút rồi bỏ phiếu! (Cần >50% số phiếu để treo cổ)`);
 
-  // [CHANGED] host giữ nguyên dù sống hay chết
   Object.assign(updates, { alive, dead, nightKill:null, nightLog, messages, votes:{}, host: d.host, dayStartTs: Date.now() });
 
-  const win = calcWin(alive, d.roles, d.enchanted||[]);
+  const win = calcWin(alive, updates.roles || d.roles, d.enchanted||[]);
   if(win) updates.winState = win;
   await updateDoc(ref(), updates);
 }
@@ -749,7 +784,6 @@ async function processDayAsHost(d){
   if(d._voteResolved || d.winState) return;
   if(!d.dayStartTs) return;
   const elapsed = Date.now() - d.dayStartTs;
-  // [CHANGED] Dùng DAY_DURATION_SEC thay vì 30s cứng
   const remaining = DAY_DURATION_SEC * 1000 - elapsed;
   if(_dayHostTimer) clearTimeout(_dayHostTimer);
   if(remaining <= 0){
@@ -769,21 +803,17 @@ function startDayTimerDisplay(d){
   const timerWrap  = document.getElementById('day-timer-wrap');
   const timerNum   = document.getElementById('day-timer-num');
   const timerFill  = document.getElementById('timer-bar-fill');
-
   timerWrap.style.display = 'flex';
 
   function tick(){
     if(!d.dayStartTs) return;
     const elapsed = Date.now() - d.dayStartTs;
-    // [CHANGED] Dùng DAY_DURATION_SEC
     const remaining = Math.max(0, DAY_DURATION_SEC - Math.floor(elapsed / 1000));
     const pct = Math.max(0, (remaining / DAY_DURATION_SEC) * 100);
 
-    // [CHANGED] Hiển thị M:SS thay vì chỉ giây
     timerNum.textContent = formatTime(remaining);
     timerFill.style.width = pct + '%';
 
-    // Color coding - urgent = last 30s, warning = last 60s
     timerNum.className = 'day-timer-num';
     if(remaining <= 30){
       timerNum.classList.add('urgent');
@@ -796,7 +826,6 @@ function startDayTimerDisplay(d){
       timerFill.style.background = 'linear-gradient(90deg,#064e3b,#10b981)';
     }
 
-    // [CHANGED] Milestone messages for 2 minutes
     const milestones = [90, 60, 30, 10, 5, 3];
     if(D && D.host === myName && milestones.includes(remaining) && _lastCountdownMsg !== remaining){
       _lastCountdownMsg = remaining;
@@ -839,9 +868,8 @@ window.resolveVote = async (overrideD) => {
   let nightLog = [...(data.nightLog||[])];
   let winState = null;
 
-  // [CHANGED] Cần >50% số người còn sống mới treo cổ (không phải chỉ nhiều nhất)
   const aliveCount = data.alive.length;
-  const majorityThreshold = Math.floor(aliveCount / 2) + 1; // số phiếu tối thiểu để treo cổ
+  const majorityThreshold = Math.floor(aliveCount / 2) + 1;
 
   const topEntry = sorted[0];
   const hasMajority = topEntry && topEntry[1] >= majorityThreshold;
@@ -879,7 +907,6 @@ window.resolveVote = async (overrideD) => {
 
   const updates = {
     alive, dead, votes:{}, nightLog, messages, _voteResolved:false,
-    // [CHANGED] host giữ nguyên không đổi
     host: data.host,
     dayStartTs: null,
     phase: winState ? 'end' : 'night',
@@ -907,7 +934,6 @@ window.skipVote = async () => {
     nightQueue:nextQueue, nightStep:0,
     nightActions:{}, nightKill:null,
     guardTarget:null, lastGuardTarget:D.guardTarget||null,
-    // [CHANGED] host giữ nguyên
     host: D.host,
     dayStartTs: null, messages
   });
@@ -941,50 +967,49 @@ window.nightAction = async (action, target) => {
   switch(action){
     case 'wolf_kill':   updates.nightKill = target; addSys('🐺 Sói đã chọn mục tiêu...'); break;
     case 'guard':       updates.guardTarget = target; updates.lastGuardTarget = d.guardTarget||null; addSys('🛡️ Bảo vệ đã chọn người cần che chắn.'); break;
-     case 'seer':{
-    if (!target) {
-        // Hiển thị nút chọn người để soi
-        toast('🔮 Chọn người muốn soi', 2000);
-        return; 
-    }
-
-    const role = d.roles[target];
-    const isWolf = (role === 'wolf' || role === 'whitewolf');
-    const resultText = isWolf 
-        ? '🐺 Là **Ma Sói**' 
-        : '👤 **Không phải** Ma Sói';
-
-    // Tin nhắn RIÊNG chỉ Tiên tri thấy
-    const privateSeerMsg = {
+    case 'seer':{
+      if (!target) { toast('🔮 Chọn người muốn soi', 2000); return; }
+      const role = d.roles[target];
+      const isWolf = (role === 'wolf' || role === 'whitewolf');
+      const resultText = isWolf ? '🐺 Là Ma Sói' : '👤 Không phải Ma Sói';
+      const privateSeerMsg = {
         system: true,
-        text: `🔮 Bạn soi **${target}**: ${resultText}`,
+        text: `🔮 Bạn soi ${target}: ${resultText}`,
         important: true,
         ts: Date.now(),
-        privateFor: myName   // Chỉ Tiên tri thấy dòng này
-    };
-
-    let messages = [...(d.messages || [])];
-    messages.push(privateSeerMsg);
-    if (messages.length > 120) messages.splice(0, messages.length - 120);
-
-    // Thông báo công khai (không lộ thông tin)
-    const publicMsg = '🔮 Tiên tri đã hoàn thành việc soi đêm nay.';
-
-    await updateDoc(ref(), { 
-        messages: messages,
-        nightStep: (d.nightStep || 0) + 1 
-    });
-
-    // Hiển thị kết quả cho Tiên tri ngay lập tức qua toast (để rõ ràng)
-    toast(`🔮 ${target}: ${resultText}`, 5000);
-
-    break;
-}
+        privateFor: myName
+      };
+      messages.push(privateSeerMsg);
+      if(messages.length > 120) messages.splice(0, messages.length - 120);
+      toast(`🔮 ${target}: ${resultText}`, 5000);
+      await updateDoc(ref(), { messages, nightStep: (d.nightStep || 0) + 1 });
+      return;
+    }
     case 'witch_save':  updates.witchSaveUsed = true; updates.nightKill = null; addSys('🧪 Phù thủy đã cứu người bị giết đêm nay!'); break;
     case 'witch_kill':{ updates.witchKillUsed = true; const na = {...(d.nightActions||{}), witch_kill: target}; updates.nightActions = na; addSys('☠️ Phù thủy đã bỏ độc ai đó...'); break; }
-    case 'cupid':{      const opts = d.alive.filter(p=>p!==myName); const p1=opts[0], p2=opts[1]||opts[0]; const lp = [...(d.loverPairs||[]),[p1,p2]]; updates.loverPairs = lp; updates.cupidDone = true; addSys(`💕 Thần tình yêu ghép đôi ${p1} & ${p2}.`); toast(`💕 Bạn đã ghép ${p1} & ${p2}`, 4000); break; }
-    case 'whitewolf_kill':{ const alive2 = d.alive.filter(p=>p!==target); const dead2 = d.players.filter(p=>!alive2.includes(p)); addSys('🤍 Sói trắng đã hành động trong đêm...'); updates.alive = alive2; updates.dead = dead2; break; }
-    case 'flutist':{    const enc = [...(d.enchanted||[])]; if(!enc.includes(target)) enc.push(target); updates.enchanted = enc; addSys(`🎵 Thổi sáo thôi miên ${target}`); break; }
+    case 'cupid':{
+      const opts = d.alive.filter(p=>p!==myName);
+      const p1=opts[0], p2=opts[1]||opts[0];
+      const lp = [...(d.loverPairs||[]),[p1,p2]];
+      updates.loverPairs = lp; updates.cupidDone = true;
+      addSys(`💕 Thần tình yêu ghép đôi ${p1} & ${p2}.`);
+      toast(`💕 Bạn đã ghép ${p1} & ${p2}`, 4000);
+      break;
+    }
+    case 'whitewolf_kill':{
+      const alive2 = d.alive.filter(p=>p!==target);
+      const dead2 = d.players.filter(p=>!alive2.includes(p));
+      addSys('🤍 Sói trắng đã hành động trong đêm...');
+      updates.alive = alive2; updates.dead = dead2;
+      break;
+    }
+    case 'flutist':{
+      const enc = [...(d.enchanted||[])];
+      if(!enc.includes(target)) enc.push(target);
+      updates.enchanted = enc;
+      addSys(`🎵 Thổi sáo thôi miên ${target}`);
+      break;
+    }
     case 'thief':       updates.roles = {...d.roles, [myName]: target}; addSys(`🥷 Ăn trộm đã đổi vai mình.`); toast(`🥷 Bạn đã trở thành ${ROLES[target]?.name||target}`, 4000); break;
     case 'skip':        addSys('⏭️ Bỏ qua lượt...'); break;
   }
@@ -993,6 +1018,22 @@ window.nightAction = async (action, target) => {
   updates.messages = messages;
   updates.nightStep = (d.nightStep||0) + 1;
   await updateDoc(ref(), updates);
+};
+
+// ── WOLF PRIVATE CHAT ──
+window.sendWolfChat = async () => {
+  if(!D) return;
+  const inp = document.getElementById('wolf-chat-msg');
+  const text = inp.value.trim();
+  if(!text) return;
+  const myRole = D.roles[myName];
+  if(!isWolfAligned(D.roles, myName)){ toast('Chỉ sói mới dùng được kênh này!'); return; }
+  if(!D.alive.includes(myName)){ toast('Bạn đã chết.'); return; }
+  const wolfMsgs = [...(D.wolfMessages||[])];
+  wolfMsgs.push({ name:myName, text, ts:Date.now() });
+  if(wolfMsgs.length > 80) wolfMsgs.splice(0, wolfMsgs.length - 80);
+  await updateDoc(ref(), { wolfMessages: wolfMsgs });
+  inp.value = '';
 };
 
 // ── VOTE ──
@@ -1029,6 +1070,7 @@ function showGameView(d){
 function renderGame(d){
   const myRole = d.roles[myName] || 'villager';
   const isAlive = d.alive.includes(myName);
+  const amWolf = isWolfAligned(d.roles, myName);
 
   const pt = document.getElementById('phase-text');
   pt.textContent = d.phase==='night'?'🌙 Ban Đêm':d.phase==='day'?'☀️ Ban Ngày':'🏁 Kết Thúc';
@@ -1040,13 +1082,12 @@ function renderGame(d){
   document.getElementById('my-role-name').textContent = ROLES[myRole]?.name || myRole;
   document.getElementById('my-role-desc').textContent = ROLES[myRole]?.desc || '';
 
-  // [CHANGED] Host badge: hiển thị dù host đã chết
-  const imWolf = myRole === 'wolf' || myRole === 'whitewolf';
+  // Player list — wolves see wolf teammates
   document.getElementById('player-list').innerHTML = d.players.map(p => {
     const dead = !d.alive.includes(p);
     const r = d.roles[p];
     const isWolfTeam = r === 'wolf' || r === 'whitewolf';
-    const showRole = p===myName || dead || (imWolf && isWolfTeam);
+    const showRole = p===myName || dead || (amWolf && isWolfTeam);
     const dotCls = dead ? 'dead' : (showRole ? (ROLES[r]?.color||'villager') : 'alive');
     const enc = d.enchanted?.includes(p)?' 🎵':'';
     const isHost = p === d.host;
@@ -1063,6 +1104,7 @@ function renderGame(d){
   else nls.style.display = 'none';
 
   renderChat(d);
+  renderWolfChat(d, amWolf, isAlive);
   renderVoteStats(d);
   renderActions(d, myRole, isAlive);
 }
@@ -1070,22 +1112,48 @@ function renderGame(d){
 function renderChat(d){
   const el = document.getElementById('chat-area');
   const msgs = (d.messages||[]).slice(-80);
-  
   el.innerHTML = msgs.map(m => {
-    // Bỏ qua tin nhắn private nếu không phải của mình
-    if (m.privateFor && m.privateFor !== myName) {
-      return '';
-    }
-
-    if(m.system) {
-      return `<div class="msg system ${m.important?'important':''}">${m.text}</div>`;
-    }
-    
+    if(m.privateFor && m.privateFor !== myName) return '';
+    if(m.system) return `<div class="msg system ${m.important?'important':''}">${m.text}</div>`;
     const cls = m.name===myName?'me':'other';
     return `<div class="msg ${cls}"><div class="msg-name">${m.name}</div>${m.text}</div>`;
   }).join('');
-  
   el.scrollTop = el.scrollHeight;
+}
+
+// ── WOLF NIGHT CHAT RENDER ──
+function renderWolfChat(d, amWolf, isAlive){
+  const section = document.getElementById('wolf-chat-section');
+  // Show wolf chat only at night, only to wolves who are alive
+  if(!amWolf || !isAlive || d.phase !== 'night'){
+    section.classList.remove('visible');
+    return;
+  }
+  section.classList.add('visible');
+
+  // Show wolf teammates in badge
+  const wolfTeam = d.alive.filter(p => isWolfAligned(d.roles, p) && p !== myName);
+  const badge = document.getElementById('wolf-chat-badge');
+  badge.textContent = wolfTeam.length > 0
+    ? `Đồng bọn: ${wolfTeam.join(', ')}`
+    : 'Sói duy nhất';
+
+  // Render wolf messages
+  const area = document.getElementById('wolf-chat-area');
+  const wolfMsgs = (d.wolfMessages||[]).slice(-40);
+  area.innerHTML = wolfMsgs.length === 0
+    ? '<div style="font-size:11px;color:#3a2020;text-align:center;padding:8px">Chưa có tin nhắn...</div>'
+    : wolfMsgs.map(m => {
+        const cls = m.name === myName ? 'me' : 'other';
+        return `<div class="wolf-msg ${cls}"><div class="wolf-msg-name">${m.name}</div>${m.text}</div>`;
+      }).join('');
+  area.scrollTop = area.scrollHeight;
+
+  // Restore flex direction if not collapsed
+  if(!_wolfChatCollapsed){
+    document.getElementById('wolf-chat-body').style.display = 'flex';
+    document.getElementById('wolf-chat-body').style.flexDirection = 'column';
+  }
 }
 
 // ── VOTE STATS PANEL ──
@@ -1103,9 +1171,7 @@ function renderVoteStats(d){
   const votes = d.votes || {};
   const totalVotes = Object.keys(votes).length;
   const aliveCount = d.alive.length;
-  // [CHANGED] Tính ngưỡng đa số >50%
   const majorityThreshold = Math.floor(aliveCount / 2) + 1;
-
   hint.textContent = `Cần ≥${majorityThreshold}/${aliveCount} phiếu để treo cổ`;
 
   if(totalVotes === 0){
@@ -1118,7 +1184,6 @@ function renderVoteStats(d){
   panel.classList.add('visible');
   badge.textContent = `${totalVotes} phiếu`;
 
-  // Count votes per target
   const counts = {};
   const votersByTarget = {};
   Object.entries(votes).forEach(([voter, target]) => {
@@ -1133,7 +1198,6 @@ function renderVoteStats(d){
   rowsEl.innerHTML = sorted.map(([name, count]) => {
     const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
     const isTop = count === maxCount && maxCount > 0;
-    // [CHANGED] Đánh dấu đặc biệt nếu đạt đa số
     const hasMaj = count >= majorityThreshold;
     const voters = votersByTarget[name] || [];
     const voterStr = voters.join(', ');
@@ -1150,8 +1214,6 @@ function renderActions(d, myRole, isAlive){
   const el = document.getElementById('action-btns');
   const label = document.getElementById('actions-label');
   el.innerHTML = '';
-
-  // [CHANGED] Host đã chết vẫn có thể dùng quyền host (kết thúc vote sớm, skip)
   const amHost = d.host === myName;
 
   if(!isAlive){
@@ -1174,7 +1236,7 @@ function renderActions(d, myRole, isAlive){
     label.textContent = `🌙 Lượt của bạn — ${ROLES[curRole]?.name||curRole}`;
     const others = d.alive.filter(p=>p!==myName);
 
-    if(curRole==='wolf')        others.filter(p=>d.roles[p]!=='wolf'&&d.roles[p]!=='whitewolf').forEach(p=>{ el.innerHTML+=`<button class="btn wolf-btn" onclick="nightAction('wolf_kill','${p}')">🐺 Giết ${p}</button>`; });
+    if(curRole==='wolf')        others.filter(p=>!isWolfAligned(d.roles, p)).forEach(p=>{ el.innerHTML+=`<button class="btn wolf-btn" onclick="nightAction('wolf_kill','${p}')">🐺 Giết ${p}</button>`; });
     if(curRole==='seer')        others.forEach(p=>{ el.innerHTML+=`<button class="btn seer-btn" onclick="nightAction('seer','${p}')">🔮 Soi ${p}</button>`; });
     if(curRole==='guard')       d.alive.filter(p=>p!==d.lastGuardTarget).forEach(p=>{ el.innerHTML+=`<button class="btn guard-btn" onclick="nightAction('guard','${p}')">🛡️ Bảo vệ ${p}</button>`; });
     if(curRole==='witch'){
@@ -1188,7 +1250,7 @@ function renderActions(d, myRole, isAlive){
     }
     if(curRole==='whitewolf'){
       d.alive.filter(p=>d.roles[p]==='wolf').forEach(p=>{ el.innerHTML+=`<button class="btn wolf-btn" onclick="nightAction('whitewolf_kill','${p}')">🤍 Giết sói ${p}</button>`; });
-      el.innerHTML+=`<button class="btn" onclick="nightAction('whitewolf_skip',null)">Bỏ qua</button>`;
+      el.innerHTML+=`<button class="btn" onclick="nightAction('skip',null)">Bỏ qua</button>`;
     }
     if(curRole==='flutist') others.slice(0,4).forEach(p=>{ el.innerHTML+=`<button class="btn gold-btn" onclick="nightAction('flutist','${p}')">🎵 Thôi miên ${p}</button>`; });
     if(curRole==='thief') (d.thiefOptions||['villager','wolf']).forEach(r=>{ el.innerHTML+=`<button class="btn" onclick="nightAction('thief','${r}')">🥷 Chọn: ${ROLES[r]?.name||r}</button>`; });
@@ -1227,14 +1289,12 @@ function showWin(winState, d){
 window.resetGame = async () => {
   document.getElementById('win-overlay').style.display = 'none';
   stopDayTimerDisplay();
-  // [CHANGED] Giữ nguyên host khi reset
   await updateDoc(ref(), {
     phase:'waiting', winState:null,
     roles:{}, alive:[], dead:[],
-    votes:{}, nightLog:[], messages:[],
+    votes:{}, nightLog:[], messages:[], wolfMessages:[],
     ready:{}, countdown:null,
     nightActions:{}, nightQueue:[], nightStep:0
-    // host không thay đổi
   });
   document.getElementById('game-view').style.display = 'none';
   document.getElementById('lobby-view').style.display = 'flex';
