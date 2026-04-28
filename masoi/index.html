@@ -418,12 +418,11 @@ const ROLES = {
 };
 
 const SPECIAL_ROLES = ['seer','guard','witch','hunter','cupid','whitewolf','halfwolf','flutist','thief'];
-// hunter vào hàng đêm để chọn người ghim mỗi đêm
 const NIGHT_ORDER   = ['cupid','thief','wolf','whitewolf','seer','guard','witch','hunter','flutist'];
 
 // ── STATE ──
-let myName    = '';
-let myRoom    = '';
+let myName  = sessionStorage.getItem('masoi_name') || '';
+let myRoom  = sessionStorage.getItem('masoi_room') || '';
 let unsubscribe = null;
 let lastPhase = '';
 let lastNight = 0;
@@ -477,21 +476,25 @@ window.createRoom = async () => {
   const n = document.getElementById('inp-name').value.trim();
   if(!n){ toast('Nhập tên trước!'); return; }
   myName = n;
+  sessionStorage.setItem('masoi_name', n);
   const id = rand();
   const initState = emptyRoomState(id, n);
   await setDoc(ref(id), initState);
   myRoom = id;
+  sessionStorage.setItem('masoi_room', id);
   subscribeRoom();
   showWaiting();
 };
 
 window.joinRoom = async () => {
-  const n = document.getElementById('inp-name').value.trim();
+  const n  = document.getElementById('inp-name').value.trim();
   const id = document.getElementById('inp-room-id').value.trim().toUpperCase();
   if(!n){ toast('Nhập tên trước!'); return; }
   if(!id){ toast('Nhập mã phòng!'); return; }
   myName = n;
   myRoom = id;
+  sessionStorage.setItem('masoi_name', n);
+  sessionStorage.setItem('masoi_room', id);
   const snap = await getDoc(ref(id));
   if(!snap.exists()){ toast('Không tìm thấy phòng!'); return; }
   const d = snap.data();
@@ -502,6 +505,18 @@ window.joinRoom = async () => {
   subscribeRoom();
   showWaiting();
 };
+
+async function tryReconnect(){
+  if(!myName || !myRoom) return;
+  const snap = await getDoc(ref(myRoom));
+  if(!snap.exists()){ sessionStorage.clear(); return; }
+  const d = snap.data();
+  if(!d.players.includes(myName)){ sessionStorage.clear(); return; }
+  document.getElementById('inp-name').value = myName;
+  subscribeRoom();
+  showWaiting();
+}
+tryReconnect();
 
 function emptyRoomState(id, host){
   return {
@@ -737,15 +752,11 @@ function applyLoverDeath(name, alive, d, nightLog, messages, addMsg){
 }
 
 // ── HELPER: HUNTER DEATH ──
-// Khi thợ săn chết (bất kỳ lý do), người bị ghim chết theo.
-// KHÔNG lộ tên thợ săn hay tên người bị ghim trong nightLog công khai.
 function applyHunterDeath(name, alive, d, nightLog, messages, addMsg){
   if(d.roles[name] !== 'hunter') return alive;
   const target = d.hunterTarget;
   if(target && alive.includes(target)){
-    // Chỉ thông báo công khai rằng có người bắn — không lộ tên thợ săn
     addMsg(`🏹 Một phát súng vang lên trong đêm... ${target} gục ngã!`);
-    // nightLog chỉ dùng nội bộ host, nhưng cũng không ghi tên thợ săn để tránh lộ
     nightLog.push(`🏹 Thợ săn hạ gục một người`);
     alive = alive.filter(p=>p!==target);
     alive = applyLoverDeath(target, alive, d, nightLog, messages, addMsg);
@@ -776,7 +787,7 @@ async function resolveNight(d){
   // ── Bảo vệ + Sói cắn ──
   if(nightKill){
     if(nightKill === d.guardTarget){
-      addMsg('🛡️ Bảo vệ đã cứu người bị sói nhắm!');
+      // FIX: Không ghi vào chat công khai — chỉ ghi nightLog nội bộ
       nightLog.push('🛡️ Bảo vệ đã cứu một người');
       wasProtected = true;
       nightKill = null;
@@ -798,14 +809,15 @@ async function resolveNight(d){
   // ── Phù thủy độc ──
   const witchKill = d.nightActions?.witch_kill;
   if(witchKill && alive.includes(witchKill)){
+    // FIX: Không lộ danh tính phù thủy qua thông báo "bị đầu độc" — dùng thông báo trung lập
     nightLog.push(`☠️ Phù thủy đầu độc ${witchKill}`);
-    addMsg(`☠️ ${witchKill} bị đầu độc!`);
+    addMsg(`☠️ ${witchKill} đã chết trong đêm.`);
     alive = alive.filter(p=>p!==witchKill);
     alive = applyHunterDeath(witchKill, alive, d, nightLog, messages, addMsg);
     alive = applyLoverDeath(witchKill, alive, d, nightLog, messages, addMsg);
   }
 
-  // ── Cập nhật lastGuardTarget — luôn gán kể cả null ──
+  // ── Cập nhật lastGuardTarget ──
   updates.lastGuardTarget = d.guardTarget || null;
 
   // ── Thông báo không ai chết ──
@@ -956,11 +968,8 @@ window.resolveVote = async (overrideD) => {
     addMsg(`☠️ ${top} bị treo cổ! (${topCount}/${aliveCount} phiếu — vượt ngưỡng ${majorityThreshold})`);
     nightLog.push('🪢 ' + top + ' bị treo cổ');
     alive = alive.filter(p=>p!==top);
-
-    // Thợ săn bị treo → dùng applyHunterDeath (không lộ vai, chỉ lộ nạn nhân)
     alive = applyHunterDeath(top, alive, data, nightLog, messages, addMsg);
     alive = applyLoverDeath(top, alive, data, nightLog, messages, addMsg);
-
     winState = calcWin(alive, data.roles, data.enchanted || []);
   }
 
@@ -988,7 +997,6 @@ window.resolveVote = async (overrideD) => {
     nightActions: {},
     nightKill: null,
     guardTarget: null,
-    // FIX: dùng lastGuardTarget đã lưu, không dùng guardTarget (đã reset)
     lastGuardTarget: data.lastGuardTarget || null,
   };
 
@@ -1032,17 +1040,19 @@ window.nightAction = async (action, target) => {
 
   let updates  = {};
   let messages = [...(d.messages||[])];
-  const addSys = t => messages.push({system:true, text:t, important:false, ts:Date.now()});
+
+  // Không addSys cho guard và witch — hành động bí mật, chỉ toast riêng
 
   switch(action){
     case 'wolf_kill':
       updates.nightKill = target;
-      addSys('🐺 Sói đã chọn mục tiêu...');
+      // Sói: chỉ thông báo trong kênh sói (không ra chat công khai)
       break;
 
     case 'guard':
+      // FIX: Không ghi gì vào chat — bảo vệ hoàn toàn bí mật
       updates.guardTarget = target;
-      addSys(`🛡️ Bảo vệ đã chọn bảo vệ ai đó.`);
+      toast(`🛡️ Bạn đã bảo vệ ${target} đêm nay.`, 4000);
       break;
 
     case 'seer': {
@@ -1058,24 +1068,24 @@ window.nightAction = async (action, target) => {
     }
 
     case 'witch_save':
+      // FIX: Không ghi gì vào chat — phù thủy dùng thuốc bí mật
       updates.witchSaveUsed = true;
       updates.nightKill     = null;
       updates.nightActions  = { ...(d.nightActions||{}), witch_acted_this_night:true };
-      addSys('🧪 Phù thủy đã hành động...');
+      toast('🧪 Bạn đã dùng thuốc cứu!', 4000);
       break;
 
     case 'witch_kill': {
+      // FIX: Không ghi gì vào chat — phù thủy đầu độc bí mật
       updates.witchKillUsed = true;
       updates.nightActions  = { ...(d.nightActions||{}), witch_kill:target, witch_acted_this_night:true };
-      addSys('☠️ Phù thủy đã bỏ độc ai đó...');
+      toast(`☠️ Bạn đã đầu độc ${target}!`, 4000);
       break;
     }
 
     case 'hunter_aim':
       updates.hunterTarget = target;
-      // Chỉ thợ săn biết mình đang ghim ai — dùng toast riêng
       toast(`🏹 Bạn đang ghim ${target}. Nếu bạn chết, ${target} chết theo.`, 5000);
-      // Không ghi vào messages công khai
       break;
 
     case 'cupid': {
@@ -1084,7 +1094,7 @@ window.nightAction = async (action, target) => {
       const lp   = [...(d.loverPairs||[]),[p1,p2]];
       updates.loverPairs  = lp;
       updates.cupidDone   = true;
-      addSys(`💕 Thần tình yêu ghép đôi hai người...`);
+      messages.push({system:true, text:`💕 Thần tình yêu ghép đôi hai người...`, important:false, ts:Date.now()});
       toast(`💕 Bạn đã ghép ${p1} & ${p2}`, 4000);
       break;
     }
@@ -1092,7 +1102,7 @@ window.nightAction = async (action, target) => {
     case 'whitewolf_kill': {
       const alive2 = d.alive.filter(p=>p!==target);
       const dead2  = d.players.filter(p=>!alive2.includes(p));
-      addSys('🤍 Sói trắng đã hành động trong đêm...');
+      messages.push({system:true, text:'🤍 Sói trắng đã hành động trong đêm...', important:false, ts:Date.now()});
       updates.alive = alive2;
       updates.dead  = dead2;
       break;
@@ -1102,18 +1112,17 @@ window.nightAction = async (action, target) => {
       const enc = [...(d.enchanted||[])];
       if(!enc.includes(target)) enc.push(target);
       updates.enchanted = enc;
-      addSys(`🎵 Thổi sáo thôi miên ${target}`);
+      messages.push({system:true, text:`🎵 Tiếng sáo vang lên trong đêm...`, important:false, ts:Date.now()});
       break;
     }
 
     case 'thief':
       updates.roles = {...d.roles, [myName]: target};
-      addSys(`🥷 Ăn trộm đã đổi vai mình.`);
+      messages.push({system:true, text:`🥷 Ăn trộm đã đổi vai mình.`, important:false, ts:Date.now()});
       toast(`🥷 Bạn đã trở thành ${ROLES[target]?.name||target}`, 4000);
       break;
 
     case 'skip':
-      addSys('⏭️ Bỏ qua lượt...');
       break;
   }
 
@@ -1150,8 +1159,8 @@ window.sendChat = async () => {
   const inp  = document.getElementById('chat-msg');
   const text = inp.value.trim();
   if(!text || !D) return;
-  if(D.phase === 'night' && D.alive.includes(myName)){ toast('🤫 Ban đêm không được nói chuyện!'); inp.value=''; return; }
-  if(!D.alive.includes(myName) && D.phase !== 'day'){ toast('👻 Người chết không được phát biểu.'); inp.value=''; return; }
+  if(!D.alive.includes(myName)){ toast('👻 Bạn đã chết — không thể chat.'); inp.value=''; return; }
+  if(D.phase === 'night'){ toast('🤫 Ban đêm không được nói chuyện!'); inp.value=''; return; }
   const msgs = [...(D.messages||[])];
   msgs.push({ name:myName, text, ts:Date.now() });
   if(msgs.length > 120) msgs.splice(0, msgs.length-120);
@@ -1172,6 +1181,7 @@ function showGameView(d){
 function renderGame(d){
   const myRole  = d.roles[myName] || 'villager';
   const isAlive = d.alive.includes(myName);
+  const iAmDead = !isAlive;                        // ← thêm dòng này
   const amWolf  = isWolfAligned(d.roles, myName);
 
   const pt = document.getElementById('phase-text');
@@ -1185,12 +1195,11 @@ function renderGame(d){
   document.getElementById('my-role-name').textContent = ROLES[myRole]?.name || myRole;
   document.getElementById('my-role-desc').textContent = ROLES[myRole]?.desc || '';
 
-  // Danh sách người chơi — sói thấy đồng đội sói
   document.getElementById('player-list').innerHTML = d.players.map(p => {
     const dead       = !d.alive.includes(p);
     const r          = d.roles[p];
     const isWolfTeam = r === 'wolf' || r === 'whitewolf';
-    const showRole   = p===myName || dead || (amWolf && isWolfTeam);
+    const showRole   = p===myName || dead || iAmDead || (amWolf && isWolfTeam);
     const dotCls     = dead ? 'dead' : (showRole ? (ROLES[r]?.color||'villager') : 'alive');
     const enc        = d.enchanted?.includes(p) ? ' 🎵' : '';
     const isHost     = p === d.host;
@@ -1352,21 +1361,21 @@ function renderActions(d, myRole, isAlive){
 
     // Bảo vệ
     if(curRole === 'guard'){
-      label.textContent = `🌙 Lượt của bạn — Bảo vệ (không bảo vệ lại người đêm trước)`;
-      const lastProtected  = d.lastGuardTarget;
-      const canProtectList = d.alive.filter(p=>p!==myName && p!==lastProtected);
-      if(canProtectList.length === 0){
-        el.innerHTML += `<button class="btn" onclick="nightAction('skip',null)">⏭️ Bỏ qua lượt</button>`;
-      } else {
-        canProtectList.forEach(p=>{
-          el.innerHTML += `<button class="btn guard-btn" onclick="nightAction('guard','${p}')">🛡️ Bảo vệ ${p}</button>`;
-        });
-      }
-    }
+  label.textContent = `🌙 Lượt của bạn — Bảo vệ (không bảo vệ lại người đêm trước)`;
+  const lastProtected  = d.lastGuardTarget;
+  // Bỏ p!==myName → bảo vệ có thể tự chọn mình
+  const canProtectList = d.alive.filter(p => p !== lastProtected);
+  if(canProtectList.length === 0){
+    el.innerHTML += `<button class="btn" onclick="nightAction('skip',null)">⏭️ Bỏ qua lượt</button>`;
+  } else {
+    canProtectList.forEach(p => {
+      el.innerHTML += `<button class="btn guard-btn" onclick="nightAction('guard','${p}')">🛡️ Bảo vệ ${p}${p===myName?' (bản thân)':''}</button>`;
+    });
+  }
+}
 
     // Phù thủy
     if(curRole === 'witch'){
-      // Thông báo riêng cho phù thủy qua toast — không lộ ra chat công khai
       if(d.nightKill){
         toast(`🧪 Người bị sói cắn đêm nay: ${d.nightKill}`, 8000);
       } else {
@@ -1378,7 +1387,6 @@ function renderActions(d, myRole, isAlive){
         label.textContent = '🌙 Phù thủy — đã dùng thuốc đêm nay';
         el.innerHTML += `<button class="btn" onclick="nightAction('skip',null)">⏭️ Kết thúc lượt</button>`;
       } else {
-        // Thuốc cứu
         if(!d.witchSaveUsed && d.nightKill){
           const victimText = d.nightKill === myName
             ? `🧪 Cứu bản thân — chỉ được đêm 1`
@@ -1387,7 +1395,6 @@ function renderActions(d, myRole, isAlive){
             el.innerHTML += `<button class="btn witch-btn" onclick="nightAction('witch_save',null)">${victimText}</button>`;
           }
         }
-        // Thuốc độc — không độc người đang sắp chết bởi sói
         if(!d.witchKillUsed){
           others.filter(p=>d.alive.includes(p) && p!==d.nightKill).forEach(p=>{
             el.innerHTML += `<button class="btn danger" onclick="nightAction('witch_kill','${p}')">☠️ Độc ${p}</button>`;
@@ -1397,11 +1404,10 @@ function renderActions(d, myRole, isAlive){
       }
     }
 
-    // Thợ săn — chọn người ghim mỗi đêm, không lộ ra ngoài
+    // Thợ săn
     if(curRole === 'hunter'){
       label.textContent = `🌙 Thợ săn — ghim 1 người (bí mật, chết thì người đó chết theo)`;
       if(d.hunterTarget){
-        // Chỉ thợ săn biết mình đang ghim ai
         const pinnedInfo = document.createElement('div');
         pinnedInfo.style.cssText = 'font-size:11px;color:#f97316;margin-bottom:6px;font-family:Cinzel,serif;';
         pinnedInfo.textContent   = `🏹 Đang ghim: ${d.hunterTarget}`;
@@ -1477,6 +1483,8 @@ function showWin(winState, d){
 }
 
 window.resetGame = async () => {
+  sessionStorage.removeItem('masoi_name');
+  sessionStorage.removeItem('masoi_room');
   document.getElementById('win-overlay').style.display = 'none';
   stopDayTimerDisplay();
   await updateDoc(ref(), {
@@ -1489,8 +1497,8 @@ window.resetGame = async () => {
   });
   document.getElementById('game-view').style.display  = 'none';
   document.getElementById('lobby-view').style.display = 'flex';
-  document.getElementById('lobby-view').querySelector('.lobby-card').style.display = 'none';
-  document.getElementById('waiting-card').style.display = 'flex';
+  document.getElementById('lobby-view').querySelector('.lobby-card').style.display = 'flex'; // ← 'flex' không phải 'none'
+  document.getElementById('waiting-card').style.display = 'none';                            // ← ẩn waiting card
   document.getElementById('header-badge').textContent  = 'Sảnh chờ';
   document.getElementById('header-badge').classList.remove('active');
   lastPhase = ''; lastNight = 0; _lastCountdownMsg = -1;
