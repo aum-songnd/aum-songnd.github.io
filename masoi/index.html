@@ -88,7 +88,7 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
   font-family:'Cinzel',serif;
   font-size:18px;
   font-weight:700;
-  min-width:28px;
+  min-width:36px;
   text-align:center;
   transition:color .3s;
 }
@@ -166,6 +166,9 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
 .vote-row-voters{font-size:10px;color:#3a5070;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
 .vote-row.top-voted .vote-row-name{color:#f08080;font-weight:600}
 .vote-row.top-voted .vote-row-bar-fill{background:linear-gradient(90deg,#7c1d1d,#ef4444);box-shadow:0 0 6px #ef444440}
+/* Highlight when target has >50% */
+.vote-row.majority .vote-row-name{color:#ef4444;font-weight:700}
+.vote-row.majority .vote-row-bar-fill{background:linear-gradient(90deg,#7f1d1d,#dc2626);box-shadow:0 0 10px #dc262660}
 
 /* ACTIONS */
 .actions-area{padding:12px 14px;border-top:1px solid var(--border);background:rgba(6,10,18,.8);min-height:80px}
@@ -269,7 +272,7 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
     <!-- Day countdown in phase bar -->
     <div class="day-timer-wrap" id="day-timer-wrap" style="display:none">
       <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-bar-fill" style="width:100%"></div></div>
-      <span class="day-timer-num ok" id="day-timer-num">30</span>
+      <span class="day-timer-num ok" id="day-timer-num">2:00</span>
     </div>
     <span class="alive-count" id="alive-count"></span>
   </div>
@@ -303,6 +306,7 @@ h1,h2,.role-name,.phase-text{font-family:'Cinzel',serif}
         <div class="vote-stats-title">
           🗳️ Bảng bỏ phiếu
           <span class="vote-count-badge" id="vote-total-badge">0 phiếu</span>
+          <span id="vote-majority-hint" style="font-size:10px;color:var(--muted);margin-left:auto"></span>
         </div>
         <div class="vote-rows" id="vote-rows"></div>
       </div>
@@ -353,6 +357,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
+// ── CONSTANTS ──
+// [CHANGED] Thời gian thảo luận ban ngày: 120 giây (2 phút)
+const DAY_DURATION_SEC = 120;
+
 // ── ROLES DATA ──
 const ROLES = {
   villager:  { name:'Dân làng',       team:'village', desc:'Tìm và treo cổ sói ban ngày.',                              color:'villager'  },
@@ -400,6 +408,13 @@ function toast(txt, duration=3000){
 }
 
 function countWolves(n, wolvesCount){ return wolvesCount || 1; }
+
+// Format seconds as M:SS
+function formatTime(seconds){
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
 
 // ── LOBBY ──
 window.showJoinInput = () => {
@@ -619,6 +634,7 @@ async function doAssignRoles(d){
   let thiefOptions = [];
   if(Object.values(roles).includes('thief')) thiefOptions = ['villager','villager'];
   const queue = buildNightQueue({ roles, alive:[...d.players], night:1, selectedRoles:d.selectedRoles||{}, cupidDone:false });
+  // [CHANGED] Host không thay đổi - giữ nguyên d.host
   await updateDoc(ref(), {
     roles, alive:[...d.players], dead:[],
     phase:'night', night:1,
@@ -629,6 +645,7 @@ async function doAssignRoles(d){
     witchSaveUsed:false, witchKillUsed:false,
     loverPairs:[], enchanted:[], nightLog:[],
     votes:{}, countdown:null, winState:null,
+    // host remains unchanged (d.host)
     messages:[{system:true,text:'🌙 Đêm 1 bắt đầu. Làng chìm vào giấc ngủ...',important:false,ts:Date.now()}]
   });
 }
@@ -643,9 +660,11 @@ function buildNightQueue(d){
   });
 }
 
-function pickNewHost(alive, currentHost){
-  if(alive.includes(currentHost)) return currentHost;
-  return alive[0] || currentHost;
+// [CHANGED] Host không tự động chuyển khi bị giết - giữ nguyên host cũ
+// Host cũ vẫn điều khiển game dù đã chết (spectator host)
+function pickNewHost(alive, currentHost, allPlayers){
+  // Giữ nguyên host dù alive hay dead
+  return currentHost;
 }
 
 async function processNightAsHost(d){
@@ -699,9 +718,11 @@ async function resolveNight(d){
   const dead = d.players.filter(p=>!alive.includes(p));
 
   if(!killed && !wkill) addMsg('☀️ Không ai chết đêm qua.');
-  addMsg('☀️ Bình minh! Thảo luận 30 giây rồi bỏ phiếu!');
+  // [CHANGED] Thông báo 2 phút thảo luận
+  addMsg(`☀️ Bình minh! Thảo luận ${DAY_DURATION_SEC / 60} phút rồi bỏ phiếu! (Cần >50% số phiếu để treo cổ)`);
 
-  Object.assign(updates, { alive, dead, nightKill:null, nightLog, messages, votes:{}, host: pickNewHost(alive, d.host), dayStartTs: Date.now() });
+  // [CHANGED] host giữ nguyên dù sống hay chết
+  Object.assign(updates, { alive, dead, nightKill:null, nightLog, messages, votes:{}, host: d.host, dayStartTs: Date.now() });
 
   const win = calcWin(alive, d.roles, d.enchanted||[]);
   if(win) updates.winState = win;
@@ -728,7 +749,8 @@ async function processDayAsHost(d){
   if(d._voteResolved || d.winState) return;
   if(!d.dayStartTs) return;
   const elapsed = Date.now() - d.dayStartTs;
-  const remaining = 30000 - elapsed;
+  // [CHANGED] Dùng DAY_DURATION_SEC thay vì 30s cứng
+  const remaining = DAY_DURATION_SEC * 1000 - elapsed;
   if(_dayHostTimer) clearTimeout(_dayHostTimer);
   if(remaining <= 0){
     await resolveVote();
@@ -753,18 +775,20 @@ function startDayTimerDisplay(d){
   function tick(){
     if(!d.dayStartTs) return;
     const elapsed = Date.now() - d.dayStartTs;
-    const remaining = Math.max(0, 30 - Math.floor(elapsed / 1000));
-    const pct = Math.max(0, (remaining / 30) * 100);
+    // [CHANGED] Dùng DAY_DURATION_SEC
+    const remaining = Math.max(0, DAY_DURATION_SEC - Math.floor(elapsed / 1000));
+    const pct = Math.max(0, (remaining / DAY_DURATION_SEC) * 100);
 
-    timerNum.textContent = remaining;
+    // [CHANGED] Hiển thị M:SS thay vì chỉ giây
+    timerNum.textContent = formatTime(remaining);
     timerFill.style.width = pct + '%';
 
-    // Color coding
+    // Color coding - urgent = last 30s, warning = last 60s
     timerNum.className = 'day-timer-num';
-    if(remaining <= 10){
+    if(remaining <= 30){
       timerNum.classList.add('urgent');
       timerFill.style.background = 'linear-gradient(90deg,#7f1d1d,#ef4444)';
-    } else if(remaining <= 20){
+    } else if(remaining <= 60){
       timerNum.classList.add('warning');
       timerFill.style.background = 'linear-gradient(90deg,#78350f,#f59e0b)';
     } else {
@@ -772,18 +796,20 @@ function startDayTimerDisplay(d){
       timerFill.style.background = 'linear-gradient(90deg,#064e3b,#10b981)';
     }
 
-    // Push countdown messages into chat (only for milestone seconds, locally displayed)
-    // We write them to Firestore at key milestones (host only, avoid spam)
-    if(D && D.host === myName && [20, 10, 5, 3].includes(remaining) && _lastCountdownMsg !== remaining){
+    // [CHANGED] Milestone messages for 2 minutes
+    const milestones = [90, 60, 30, 10, 5, 3];
+    if(D && D.host === myName && milestones.includes(remaining) && _lastCountdownMsg !== remaining){
       _lastCountdownMsg = remaining;
       let chatMsg;
-      if(remaining === 20) chatMsg = '⏳ Còn 20 giây để thảo luận!';
-      else if(remaining === 10) chatMsg = '⚡ Còn 10 giây! Nhanh lên!';
+      if(remaining === 90) chatMsg = '⏳ Còn 1 phút 30 giây để thảo luận!';
+      else if(remaining === 60) chatMsg = '⏳ Còn 1 phút! Hãy đưa ra quyết định!';
+      else if(remaining === 30) chatMsg = '⚡ Còn 30 giây! Nhanh lên!';
+      else if(remaining === 10) chatMsg = '🔴 Còn 10 giây!';
       else if(remaining === 5) chatMsg = '🔴 Còn 5 giây!';
       else if(remaining === 3) chatMsg = '🔴 3... 2... 1...';
       if(chatMsg){
         const msgs = [...(D.messages||[])];
-        msgs.push({system:true, text:chatMsg, important:remaining<=10, ts:Date.now()});
+        msgs.push({system:true, text:chatMsg, important:remaining<=30, ts:Date.now()});
         if(msgs.length > 120) msgs.splice(0, msgs.length - 120);
         updateDoc(ref(), { messages: msgs }).catch(()=>{});
       }
@@ -813,11 +839,25 @@ window.resolveVote = async (overrideD) => {
   let nightLog = [...(data.nightLog||[])];
   let winState = null;
 
-  if(sorted.length === 0 || (sorted[1] && sorted[1][1]===sorted[0][1])){
-    addMsg('⚖️ Hoà phiếu! Không ai bị treo cổ hôm nay.');
+  // [CHANGED] Cần >50% số người còn sống mới treo cổ (không phải chỉ nhiều nhất)
+  const aliveCount = data.alive.length;
+  const majorityThreshold = Math.floor(aliveCount / 2) + 1; // số phiếu tối thiểu để treo cổ
+
+  const topEntry = sorted[0];
+  const hasMajority = topEntry && topEntry[1] >= majorityThreshold;
+  const isTie = sorted.length >= 2 && sorted[1][1] === sorted[0][1];
+
+  if(!hasMajority || isTie){
+    if(sorted.length === 0){
+      addMsg('⚖️ Không ai bỏ phiếu. Không ai bị treo cổ hôm nay.');
+    } else if(isTie){
+      addMsg(`⚖️ Hoà phiếu! Không ai đạt đa số tuyệt đối (cần ≥${majorityThreshold}/${aliveCount} phiếu). Không ai bị treo cổ.`);
+    } else {
+      addMsg(`⚖️ Không ai đạt đa số tuyệt đối (cần ≥${majorityThreshold}/${aliveCount} phiếu). Không ai bị treo cổ.`);
+    }
   } else {
-    const [top, topCount] = sorted[0];
-    addMsg(`☠️ ${top} bị treo cổ! (${topCount}/${Object.keys(votes).length} phiếu)`);
+    const [top, topCount] = topEntry;
+    addMsg(`☠️ ${top} bị treo cổ! (${topCount}/${aliveCount} phiếu — vượt ngưỡng ${majorityThreshold} cần thiết)`);
     nightLog.push('🪢 ' + top + ' bị treo cổ');
     alive = alive.filter(p=>p!==top);
     alive = applyLoverDeath(top, alive, data, nightLog, messages, addMsg);
@@ -839,7 +879,8 @@ window.resolveVote = async (overrideD) => {
 
   const updates = {
     alive, dead, votes:{}, nightLog, messages, _voteResolved:false,
-    host: pickNewHost(alive, data.host),
+    // [CHANGED] host giữ nguyên không đổi
+    host: data.host,
     dayStartTs: null,
     phase: winState ? 'end' : 'night',
     night: winState ? data.night : nextNight,
@@ -866,7 +907,8 @@ window.skipVote = async () => {
     nightQueue:nextQueue, nightStep:0,
     nightActions:{}, nightKill:null,
     guardTarget:null, lastGuardTarget:D.guardTarget||null,
-    host: pickNewHost(D.alive, D.host),
+    // [CHANGED] host giữ nguyên
+    host: D.host,
     dayStartTs: null, messages
   });
 };
@@ -899,7 +941,45 @@ window.nightAction = async (action, target) => {
   switch(action){
     case 'wolf_kill':   updates.nightKill = target; addSys('🐺 Sói đã chọn mục tiêu...'); break;
     case 'guard':       updates.guardTarget = target; updates.lastGuardTarget = d.guardTarget||null; addSys('🛡️ Bảo vệ đã chọn người cần che chắn.'); break;
-    case 'seer':{       const t = d.roles[target]; addSys(`🔮 [Chỉ bạn thấy] Tiên tri: ${target} là ${ROLES[t]?.name||t}`); toast(`👁️ ${target} là ${ROLES[t]?.name||t}`, 5000); break; }
+     case 'seer':{
+    if (!target) {
+        // Hiển thị nút chọn người để soi
+        toast('🔮 Chọn người muốn soi', 2000);
+        return; 
+    }
+
+    const role = d.roles[target];
+    const isWolf = (role === 'wolf' || role === 'whitewolf');
+    const resultText = isWolf 
+        ? '🐺 Là **Ma Sói**' 
+        : '👤 **Không phải** Ma Sói';
+
+    // Tin nhắn RIÊNG chỉ Tiên tri thấy
+    const privateSeerMsg = {
+        system: true,
+        text: `🔮 Bạn soi **${target}**: ${resultText}`,
+        important: true,
+        ts: Date.now(),
+        privateFor: myName   // Chỉ Tiên tri thấy dòng này
+    };
+
+    let messages = [...(d.messages || [])];
+    messages.push(privateSeerMsg);
+    if (messages.length > 120) messages.splice(0, messages.length - 120);
+
+    // Thông báo công khai (không lộ thông tin)
+    const publicMsg = '🔮 Tiên tri đã hoàn thành việc soi đêm nay.';
+
+    await updateDoc(ref(), { 
+        messages: messages,
+        nightStep: (d.nightStep || 0) + 1 
+    });
+
+    // Hiển thị kết quả cho Tiên tri ngay lập tức qua toast (để rõ ràng)
+    toast(`🔮 ${target}: ${resultText}`, 5000);
+
+    break;
+}
     case 'witch_save':  updates.witchSaveUsed = true; updates.nightKill = null; addSys('🧪 Phù thủy đã cứu người bị giết đêm nay!'); break;
     case 'witch_kill':{ updates.witchKillUsed = true; const na = {...(d.nightActions||{}), witch_kill: target}; updates.nightActions = na; addSys('☠️ Phù thủy đã bỏ độc ai đó...'); break; }
     case 'cupid':{      const opts = d.alive.filter(p=>p!==myName); const p1=opts[0], p2=opts[1]||opts[0]; const lp = [...(d.loverPairs||[]),[p1,p2]]; updates.loverPairs = lp; updates.cupidDone = true; addSys(`💕 Thần tình yêu ghép đôi ${p1} & ${p2}.`); toast(`💕 Bạn đã ghép ${p1} & ${p2}`, 4000); break; }
@@ -960,6 +1040,7 @@ function renderGame(d){
   document.getElementById('my-role-name').textContent = ROLES[myRole]?.name || myRole;
   document.getElementById('my-role-desc').textContent = ROLES[myRole]?.desc || '';
 
+  // [CHANGED] Host badge: hiển thị dù host đã chết
   const imWolf = myRole === 'wolf' || myRole === 'whitewolf';
   document.getElementById('player-list').innerHTML = d.players.map(p => {
     const dead = !d.alive.includes(p);
@@ -968,9 +1049,10 @@ function renderGame(d){
     const showRole = p===myName || dead || (imWolf && isWolfTeam);
     const dotCls = dead ? 'dead' : (showRole ? (ROLES[r]?.color||'villager') : 'alive');
     const enc = d.enchanted?.includes(p)?' 🎵':'';
+    const isHost = p === d.host;
     return `<div class="player-item ${dead?'dead':''} ${p===myName?'me':''}">
       <span class="dot ${dotCls}"></span>
-      <span>${p}${dead?' †':''}${enc}</span>
+      <span>${p}${dead?' †':''}${enc}${isHost?' 👑':''}</span>
       ${showRole?`<span class="player-role-tag">${ROLES[r]?.name||r||'?'}</span>`:''}
     </div>`;
   }).join('');
@@ -988,11 +1070,21 @@ function renderGame(d){
 function renderChat(d){
   const el = document.getElementById('chat-area');
   const msgs = (d.messages||[]).slice(-80);
+  
   el.innerHTML = msgs.map(m => {
-    if(m.system) return `<div class="msg system ${m.important?'important':''}">${m.text}</div>`;
+    // Bỏ qua tin nhắn private nếu không phải của mình
+    if (m.privateFor && m.privateFor !== myName) {
+      return '';
+    }
+
+    if(m.system) {
+      return `<div class="msg system ${m.important?'important':''}">${m.text}</div>`;
+    }
+    
     const cls = m.name===myName?'me':'other';
     return `<div class="msg ${cls}"><div class="msg-name">${m.name}</div>${m.text}</div>`;
   }).join('');
+  
   el.scrollTop = el.scrollHeight;
 }
 
@@ -1001,6 +1093,7 @@ function renderVoteStats(d){
   const panel = document.getElementById('vote-stats-panel');
   const rowsEl = document.getElementById('vote-rows');
   const badge = document.getElementById('vote-total-badge');
+  const hint = document.getElementById('vote-majority-hint');
 
   if(d.phase !== 'day'){
     panel.classList.remove('visible');
@@ -1009,6 +1102,11 @@ function renderVoteStats(d){
 
   const votes = d.votes || {};
   const totalVotes = Object.keys(votes).length;
+  const aliveCount = d.alive.length;
+  // [CHANGED] Tính ngưỡng đa số >50%
+  const majorityThreshold = Math.floor(aliveCount / 2) + 1;
+
+  hint.textContent = `Cần ≥${majorityThreshold}/${aliveCount} phiếu để treo cổ`;
 
   if(totalVotes === 0){
     panel.classList.add('visible');
@@ -1035,12 +1133,14 @@ function renderVoteStats(d){
   rowsEl.innerHTML = sorted.map(([name, count]) => {
     const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
     const isTop = count === maxCount && maxCount > 0;
+    // [CHANGED] Đánh dấu đặc biệt nếu đạt đa số
+    const hasMaj = count >= majorityThreshold;
     const voters = votersByTarget[name] || [];
     const voterStr = voters.join(', ');
-    return `<div class="vote-row ${isTop?'top-voted':''}">
-      <span class="vote-row-name">${name}</span>
+    return `<div class="vote-row ${hasMaj?'majority':isTop?'top-voted':''}">
+      <span class="vote-row-name">${name}${hasMaj?' ⚠️':''}</span>
       <div class="vote-row-bar-track"><div class="vote-row-bar-fill" style="width:${pct}%"></div></div>
-      <span class="vote-row-count">${count}</span>
+      <span class="vote-row-count">${count}/${majorityThreshold}</span>
       <span class="vote-row-voters" title="${voterStr}">← ${voterStr}</span>
     </div>`;
   }).join('');
@@ -1051,7 +1151,17 @@ function renderActions(d, myRole, isAlive){
   const label = document.getElementById('actions-label');
   el.innerHTML = '';
 
-  if(!isAlive){ label.textContent = '👻 Bạn đã chết — chỉ được xem'; return; }
+  // [CHANGED] Host đã chết vẫn có thể dùng quyền host (kết thúc vote sớm, skip)
+  const amHost = d.host === myName;
+
+  if(!isAlive){
+    label.textContent = amHost ? '👑 Host (đã chết) — có thể kết thúc sớm' : '👻 Bạn đã chết — chỉ được xem';
+    if(amHost && d.phase === 'day'){
+      el.innerHTML += `<button class="btn danger" onclick="resolveVote()">⚖️ Kết thúc bỏ phiếu sớm</button>`;
+      el.innerHTML += `<button class="btn" onclick="skipVote()">⏭️ Bỏ qua ngày này</button>`;
+    }
+    return;
+  }
   if(d.phase === 'end'){ label.textContent = '🏁 Ván kết thúc'; return; }
 
   if(d.phase === 'night'){
@@ -1086,13 +1196,15 @@ function renderActions(d, myRole, isAlive){
   }
 
   if(d.phase === 'day'){
-    label.textContent = `☀️ Bỏ phiếu treo cổ`;
+    const aliveCount = d.alive.length;
+    const majorityThreshold = Math.floor(aliveCount / 2) + 1;
+    label.textContent = `☀️ Bỏ phiếu treo cổ (cần ≥${majorityThreshold}/${aliveCount} phiếu)`;
     d.alive.filter(p=>p!==myName).forEach(p=>{
       const voted = d.votes?.[myName]===p;
       el.innerHTML+=`<button class="btn ${voted?'gold':''}" onclick="votePlayer('${p}')">🗳️ Treo ${p}${voted?' ✓':''}</button>`;
     });
     el.innerHTML+=`<button class="btn" onclick="skipVote()">Không treo ai</button>`;
-    if(d.host===myName) el.innerHTML+=`<button class="btn danger" onclick="resolveVote()">⚖️ Kết thúc sớm</button>`;
+    if(amHost) el.innerHTML+=`<button class="btn danger" onclick="resolveVote()">⚖️ Kết thúc sớm</button>`;
   }
 }
 
@@ -1115,12 +1227,14 @@ function showWin(winState, d){
 window.resetGame = async () => {
   document.getElementById('win-overlay').style.display = 'none';
   stopDayTimerDisplay();
+  // [CHANGED] Giữ nguyên host khi reset
   await updateDoc(ref(), {
     phase:'waiting', winState:null,
     roles:{}, alive:[], dead:[],
     votes:{}, nightLog:[], messages:[],
     ready:{}, countdown:null,
     nightActions:{}, nightQueue:[], nightStep:0
+    // host không thay đổi
   });
   document.getElementById('game-view').style.display = 'none';
   document.getElementById('lobby-view').style.display = 'flex';
