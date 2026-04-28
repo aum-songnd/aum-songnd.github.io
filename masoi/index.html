@@ -1094,8 +1094,19 @@ window.nightAction = async (action, target) => {
       await updateDoc(ref(), { messages, nightStep: (d.nightStep || 0) + 1 });
       return;
     }
-    case 'witch_save':  updates.witchSaveUsed = true; updates.nightKill = null; addSys('🧪 Phù thủy đã cứu người bị giết đêm nay!'); break;
-    case 'witch_kill':{ updates.witchKillUsed = true; const na = {...(d.nightActions||{}), witch_kill: target}; updates.nightActions = na; addSys('☠️ Phù thủy đã bỏ độc ai đó...'); break; }
+    case 'witch_save':
+  updates.witchSaveUsed = true;
+  updates.nightKill = null;
+  updates.nightActions = { ...(d.nightActions || {}), witch_acted_this_night: true };
+  addSys('🧪 Phù thủy đã hành động...');
+  break;
+    case 'witch_kill': {
+  updates.witchKillUsed = true;
+  const na = { ...(d.nightActions || {}), witch_kill: target, witch_acted_this_night: true };
+  updates.nightActions = na;
+  addSys('☠️ Phù thủy đã bỏ độc ai đó...');
+  break;
+}
     case 'cupid':{
       const opts = d.alive.filter(p=>p!==myName);
       const p1=opts[0], p2=opts[1]||opts[0];
@@ -1342,7 +1353,14 @@ function renderActions(d, myRole, isAlive){
     const curRole = queue[step];
     if(myRole !== curRole){ label.textContent = `🌙 Chờ đến lượt... (${ROLES[curRole]?.name||curRole} đang hành động)`; return; }
 
-    label.textContent = `🌙 Lượt của bạn — ${ROLES[curRole]?.name||curRole}`;
+    if (curRole === 'witch') {
+  // Chỉ phù thủy thấy — hiển thị qua toast riêng, không để lên UI chung
+  if (d.nightKill) {
+    toast(`🧪 Người bị sói cắn đêm nay: ${d.nightKill}`, 8000);
+  } else {
+    toast('🧪 Đêm nay không ai bị sói cắn', 4000);
+  }
+}
     const others = d.alive.filter(p=>p!==myName);
 
     if(curRole==='wolf')        others.filter(p=>!isWolfAligned(d.roles, p)).forEach(p=>{ el.innerHTML+=`<button class="btn wolf-btn" onclick="nightAction('wolf_kill','${p}')">🐺 Giết ${p}</button>`; });
@@ -1368,11 +1386,35 @@ function renderActions(d, myRole, isAlive){
         });
       }
     }
-    if(curRole==='witch'){
-      if(!d.witchSaveUsed && d.nightKill) el.innerHTML+=`<button class="btn witch-btn" onclick="nightAction('witch_save',null)">🧪 Cứu ${d.nightKill}</button>`;
-      if(!d.witchKillUsed) others.forEach(p=>{ el.innerHTML+=`<button class="btn danger" onclick="nightAction('witch_kill','${p}')">☠️ Độc ${p}</button>`; });
-      el.innerHTML+=`<button class="btn" onclick="nightAction('skip',null)">Bỏ qua</button>`;
+    if (curRole === 'witch') {
+  const alreadyActed = d.nightActions?.witch_acted_this_night;
+  const canSaveSelf = d.nightKill === myName && d.night === 1;
+
+  if (alreadyActed) {
+    label.textContent = '🌙 Phù thủy — đã dùng thuốc đêm nay';
+    el.innerHTML += `<button class="btn" onclick="nightAction('skip',null)">⏭️ Kết thúc lượt</button>`;
+  } else {
+    // Thuốc cứu — chỉ hiện nếu còn thuốc và có người bị cắn
+    if (!d.witchSaveUsed && d.nightKill) {
+      const victimText = d.nightKill === myName
+  ? `🧪 Cứu bản thân — chỉ được đêm 1`
+  : `🧪 Cứu người bị sói cắn đêm nay`;
+      // Chặn tự cứu sau đêm 1
+      if (d.nightKill !== myName || d.night === 1) {
+        el.innerHTML += `<button class="btn witch-btn" onclick="nightAction('witch_save',null)">${victimText}</button>`;
+      }
     }
+    // Thuốc độc — chỉ được dùng nếu chưa dùng thuốc cứu đêm nay, lọc người còn sống
+    if (!d.witchKillUsed) {
+      others
+        .filter(p => d.alive.includes(p) && p !== d.nightKill) // không độc người đã sắp chết
+        .forEach(p => {
+          el.innerHTML += `<button class="btn danger" onclick="nightAction('witch_kill','${p}')">☠️ Độc ${p}</button>`;
+        });
+    }
+    el.innerHTML += `<button class="btn" onclick="nightAction('skip',null)">Bỏ qua</button>`;
+  }
+}
     if(curRole==='cupid'){
       el.innerHTML+=`<button class="btn gold-btn" onclick="nightAction('cupid',null)">💕 Ghép đôi ngẫu nhiên</button>`;
       el.innerHTML+=`<button class="btn" onclick="nightAction('skip',null)">Bỏ qua</button>`;
