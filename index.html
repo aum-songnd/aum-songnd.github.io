@@ -2,44 +2,10 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <title>Vườn hoe hoe hoe 🐍</title>
     <link rel="stylesheet" href="css/style.css" />
-
     <style>
-      .music-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 55px;
-        height: 55px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.6);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 20px;
-        z-index: 999;
-      }
-
-      .music-btn.playing {
-        animation: spin 3s linear infinite;
-      }
-
-      @keyframes spin {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
       .music-panel {
         position: fixed;
         bottom: 90px;
@@ -53,11 +19,7 @@
         gap: 6px;
         z-index: 999;
       }
-
-      .music-panel.active {
-        display: flex;
-      }
-
+      .music-panel.active { display: flex; }
       .music-item {
         padding: 8px;
         border-radius: 6px;
@@ -66,14 +28,8 @@
         font-size: 14px;
         background: rgba(255, 255, 255, 0.1);
       }
-
-      .music-item:hover {
-        background: rgba(255, 255, 255, 0.25);
-      }
-
-      .music-item.active {
-        background: rgba(0, 255, 150, 0.4);
-      }
+      .music-item:hover { background: rgba(255, 255, 255, 0.25); }
+      .music-item.active { background: rgba(0, 255, 150, 0.4); }
     </style>
   </head>
 
@@ -81,94 +37,101 @@
     <div class="wrapper">
       <h1 class="title">
         <span class="snake left">🐍</span>
-        <span class="text">HỘI GẮN GÍCH</span>
+        <span class="text"></span>
         <span class="snake right">🐍</span>
       </h1>
 
       <nav class="menu">
         <a href="index.html" class="menu-item active">🌿 Vườn cây</a>
-        <a href="member/index.html" class="menu-item">👥 Thành viên</a>
-        <!-- <a href="about/index.html" class="menu-item2">?? About us</a> -->
+        <!-- <a href="member/index.html" class="menu-item">👥 Thành viên</a> -->
         <a href="masoi/index.html" class="menu-item">🐺 Ma Sói</a>
-        <!-- <a href="https://aum-songnd.github.io/my-music/" target="_blank" class="menu-item">Nhạc điii</a> -->
-      </nav>
-      <nav class="menu2">
-        <a href="fly/index.html" class="menu-item">Bay</a>
       </nav>
 
       <div class="search-wrap">
-        <input
-          type="text"
-          id="search"
-          placeholder="Tìm cây hoặc tên người..."
-        />
+        <input type="text" id="search" placeholder="Tìm cây hoặc tên người..." />
       </div>
 
-      <p id="hint">Nhập ít nhất 2 ký tự để tìm kiếm</p>
+      <p id="hint" style="display:none"></p>
       <div id="data"></div>
     </div>
 
-    <!-- MUSIC -->
-    <div class="music-btn" id="musicBtn">
-      <span id="musicIcon">▶</span>
-    </div>
-
+    <div class="music-btn" id="musicBtn"><span id="musicIcon">▶</span></div>
     <div class="music-panel" id="musicPanel"></div>
-
     <audio id="bgMusic"></audio>
 
     <script>
-      const audio = document.getElementById("bgMusic");
-      const icon = document.getElementById("musicIcon");
+      // --- TYPEWRITER ---
+      const titles = [
+        { text: "HỘI GẮN GÍCH",           color: "darkseagreen" },
+        { text: "Gắn gích TOP2 NEVER DIE", color: "#aaffbb" },
+      ];
+      const el = document.querySelector(".text");
+      let cur = 0;
+
+      function type(item, cb) {
+        el.textContent = "";
+        el.style.color = item.color;
+        el.style.borderRightColor = item.color;
+        el.style.visibility = "visible";
+        let i = 0;
+        const t = setInterval(() => {
+          el.textContent += item.text[i++];
+          if (i >= item.text.length) { clearInterval(t); setTimeout(cb, 1500); }
+        }, 80);
+      }
+
+      function erase(cb) {
+        const t = setInterval(() => {
+          el.textContent = el.textContent.slice(0, -1);
+          if (!el.textContent) { clearInterval(t); setTimeout(cb, 200); }
+        }, 40);
+      }
+
+      function loop() {
+        type(titles[cur], () => erase(() => {
+          cur = (cur + 1) % titles.length;
+          loop();
+        }));
+      }
+
+      setTimeout(loop, 300);
+
+      // --- MUSIC ---
+      const audio    = document.getElementById("bgMusic");
+      const icon     = document.getElementById("musicIcon");
       const musicBtn = document.getElementById("musicBtn");
-      const panel = document.getElementById("musicPanel");
+      const panel    = document.getElementById("musicPanel");
 
       const playlist = [
-        { name: "Lofi 1", src: "audio/lofi.mp3" },
-        { name: "DạO bƯớC hỒnG Conggggg", src: "audio/lofi2.mp3" },
-        { name: "Chú đại biiiiiiiiiii", src: "audio/lofi3.mp3" },
+        { name: "Chú đại biiiiiiiiiii",    src: "audio/lofi3.mp3" },
       ];
 
-      let currentSong = parseInt(localStorage.getItem("musicIndex")) || 0;
-
-      let isPlaying = localStorage.getItem("musicPlaying") === "true";
-
-      let firstInteraction = false; // 🔥 QUAN TRỌNG
+      let currentSong     = parseInt(localStorage.getItem("musicIndex")) || 0;
+      let isPlaying       = localStorage.getItem("musicPlaying") === "true";
+      let firstInteraction = false;
 
       function renderPlaylist() {
         panel.innerHTML = "";
-
         playlist.forEach((song, index) => {
           const div = document.createElement("div");
-          div.className =
-            "music-item" + (index === currentSong ? " active" : "");
-
+          div.className = "music-item" + (index === currentSong ? " active" : "");
           div.textContent = song.name;
-
-          div.onclick = () => {
-            playSong(index);
-            panel.classList.remove("active");
-          };
-
+          div.onclick = () => { playSong(index); panel.classList.remove("active"); };
           panel.appendChild(div);
         });
       }
 
       function playSong(index) {
         currentSong = index;
-
         audio.src = playlist[currentSong].src;
         audio.load();
-
         localStorage.setItem("musicIndex", currentSong);
-
         audio.play().then(() => {
           icon.textContent = "♪";
           musicBtn.classList.add("playing");
           isPlaying = true;
           localStorage.setItem("musicPlaying", "true");
         });
-
         renderPlaylist();
       }
 
@@ -181,57 +144,31 @@
           localStorage.setItem("musicPlaying", "false");
           return;
         }
-
         panel.classList.toggle("active");
         renderPlaylist();
       }
 
       musicBtn.onclick = toggleButton;
-
-      audio.addEventListener("ended", () => {
-        currentSong = (currentSong + 1) % playlist.length;
-        playSong(currentSong);
-      });
+      audio.addEventListener("ended", () => { currentSong = (currentSong + 1) % playlist.length; playSong(currentSong); });
 
       function init() {
         audio.src = playlist[currentSong].src;
         renderPlaylist();
-
         if (isPlaying) {
-          audio
-            .play()
-            .then(() => {
-              icon.textContent = "♪";
-              musicBtn.classList.add("playing");
-            })
-            .catch(() => {
-              icon.textContent = "▶";
-            });
-        } else {
-          icon.textContent = "▶";
+          audio.play().then(() => { icon.textContent = "♪"; musicBtn.classList.add("playing"); }).catch(() => { icon.textContent = "▶"; });
         }
       }
 
-      // 🔥 AUTO PLAY SAU LẦN TƯƠNG TÁC ĐẦU TIÊN
       function enableAutoPlayOnce() {
         if (firstInteraction) return;
         firstInteraction = true;
-
-        if (!isPlaying) {
-          playSong(currentSong);
-        }
+        if (!isPlaying) playSong(currentSong);
       }
 
       window.addEventListener("load", () => {
         init();
-
-        document.addEventListener("click", enableAutoPlayOnce, {
-          once: true,
-        });
-
-        document.addEventListener("touchstart", enableAutoPlayOnce, {
-          once: true,
-        });
+        document.addEventListener("click",      enableAutoPlayOnce, { once: true });
+        document.addEventListener("touchstart", enableAutoPlayOnce, { once: true });
       });
     </script>
 
